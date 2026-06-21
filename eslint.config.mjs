@@ -17,6 +17,12 @@ export default tseslint.config(
     },
   },
   {
+    files: ['app/pages/**/*.vue', 'app/layouts/**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
+  {
     ignores: ['.nuxt/', 'dist/', 'node_modules/'],
   },
 )
