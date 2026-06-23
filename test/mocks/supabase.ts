@@ -31,9 +31,11 @@ export function resetMocks() {
   mockQueryChain.eq.mockReset().mockReturnThis()
   mockQueryChain.single.mockReset().mockReturnThis()
   mockQueryChain.maybeSingle.mockReset().mockReturnThis()
-  mockQueryChain.then.mockReset().mockImplementation((resolve: (v: unknown) => unknown) =>
-    Promise.resolve(resolve({ data: [], error: null })),
-  )
+  mockQueryChain.then
+    .mockReset()
+    .mockImplementation((resolve: (v: unknown) => unknown) =>
+      Promise.resolve(resolve({ data: [], error: null })),
+    )
   ;(mockSupabaseClient.from as ReturnType<typeof vi.fn>).mockReset().mockReturnValue(mockQueryChain)
   mockCreateClient.mockReset().mockImplementation(() => mockSupabaseClient)
 }
