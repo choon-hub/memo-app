@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { mockQueryChain, mockSupabaseClient } from '../../../test/mocks/supabase'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { mockQueryChain, mockSupabaseClient, resetMocks } from '../../../test/mocks/supabase'
 import { useDailyNew } from '../useDailyNew'
 
 vi.mock('../useSupabase', () => ({
@@ -7,8 +7,12 @@ vi.mock('../useSupabase', () => ({
 }))
 
 describe('useDailyNew', () => {
+  beforeEach(() => {
+    resetMocks()
+  })
+
   afterEach(() => {
-    vi.clearAllMocks()
+    vi.resetAllMocks()
   })
 
   describe('fetchList()', () => {
@@ -64,11 +68,13 @@ describe('useDailyNew', () => {
       expect(error.value).toBeNull()
       expect(loading.value).toBe(false)
       expect(items.value).toEqual([])
+      expect(mockSupabaseClient.from).toHaveBeenCalledTimes(2)
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('daily_new')
       expect(mockQueryChain.insert).toHaveBeenCalledWith({
         title: 'New title',
         content: 'New content',
       })
+      expect(mockQueryChain.select).toHaveBeenCalledWith('*')
     })
 
     it('inserts with created_at when date is provided', async () => {
