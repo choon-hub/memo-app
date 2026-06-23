@@ -21,3 +21,19 @@ export const mockSupabaseClient = {
 } as unknown as import('@supabase/supabase-js').SupabaseClient
 
 export const mockCreateClient = vi.fn(() => mockSupabaseClient)
+
+export function resetMocks() {
+  mockQueryChain.select.mockReset().mockReturnThis()
+  mockQueryChain.insert.mockReset().mockReturnThis()
+  mockQueryChain.update.mockReset().mockReturnThis()
+  mockQueryChain.delete.mockReset().mockReturnThis()
+  mockQueryChain.order.mockReset().mockReturnThis()
+  mockQueryChain.eq.mockReset().mockReturnThis()
+  mockQueryChain.single.mockReset().mockReturnThis()
+  mockQueryChain.maybeSingle.mockReset().mockReturnThis()
+  mockQueryChain.then.mockReset().mockImplementation((resolve: (v: unknown) => unknown) =>
+    Promise.resolve(resolve({ data: [], error: null })),
+  )
+  ;(mockSupabaseClient.from as ReturnType<typeof vi.fn>).mockReset().mockReturnValue(mockQueryChain)
+  mockCreateClient.mockReset().mockImplementation(() => mockSupabaseClient)
+}
