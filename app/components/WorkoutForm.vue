@@ -1,0 +1,196 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+
+const props = defineProps<{
+  loading?: boolean
+}>()
+
+const emit = defineEmits<{
+  submit: [payload: { menu: string; intensity: number; reps: number; date: string }]
+}>()
+
+const menu = ref('')
+const intensity = ref('')
+const reps = ref('')
+const date = ref('')
+
+const isDisabled = computed(() => {
+  const intensityNum = Number(intensity.value)
+  const repsNum = Number(reps.value)
+  return (
+    !menu.value.trim() ||
+    intensity.value === '' ||
+    isNaN(intensityNum) ||
+    intensityNum < 0 ||
+    reps.value === '' ||
+    isNaN(repsNum) ||
+    !Number.isInteger(repsNum) ||
+    repsNum <= 0 ||
+    !date.value ||
+    props.loading
+  )
+})
+
+function handleSubmit() {
+  if (isDisabled.value) return
+  emit('submit', {
+    menu: menu.value.trim(),
+    intensity: Number(intensity.value),
+    reps: Number(reps.value),
+    date: date.value,
+  })
+  menu.value = ''
+  intensity.value = ''
+  reps.value = ''
+  date.value = ''
+}
+</script>
+
+<template>
+  <form class="form" @submit.prevent="handleSubmit">
+    <div class="fields">
+      <div class="field field-menu">
+        <label for="wo-menu" class="label">メニュー</label>
+        <input id="wo-menu" v-model="menu" type="text" class="input" placeholder="種目名" />
+      </div>
+      <div class="field field-intensity">
+        <label for="wo-intensity" class="label">重量 kg</label>
+        <input
+          id="wo-intensity"
+          v-model="intensity"
+          type="number"
+          class="input"
+          placeholder="0"
+          min="0"
+          step="0.5"
+        />
+      </div>
+      <div class="field field-reps">
+        <label for="wo-reps" class="label">回数</label>
+        <input
+          id="wo-reps"
+          v-model="reps"
+          type="number"
+          class="input"
+          placeholder="0"
+          min="1"
+          step="1"
+        />
+      </div>
+    </div>
+    <div class="field">
+      <label for="wo-date" class="label">日付</label>
+      <div class="date-wrapper">
+        <svg
+          class="calendar-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+        <input id="wo-date" v-model="date" type="date" class="input date-input" />
+      </div>
+    </div>
+    <button type="submit" class="submit-btn" :disabled="isDisabled">記録する</button>
+  </form>
+</template>
+
+<style scoped>
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 9px 40px rgba(101, 108, 238, 0.1);
+}
+
+.fields {
+  display: flex;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-menu {
+  flex: 2;
+}
+
+.field-intensity,
+.field-reps {
+  flex: 1;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #29303e;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e0dfe9;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #29303e;
+  background: #f8f8fb;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.input:focus {
+  border-color: #6570f4;
+}
+
+.date-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.calendar-icon {
+  position: absolute;
+  left: 12px;
+  color: #7c85a2;
+  pointer-events: none;
+}
+
+.date-input {
+  padding-left: 36px;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 46px;
+  background: #4754f0;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+</style>
