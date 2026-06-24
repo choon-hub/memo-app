@@ -15,7 +15,7 @@ async function handleSubmit(payload: { title: string; content: string; date: str
 
 <template>
   <div class="page">
-    <h1 class="page-title">1日1新</h1>
+    <h1 class="sr-only">1日1新</h1>
     <div v-if="error" class="error">{{ error }}</div>
     <DailyNewForm :loading="loading" @submit="handleSubmit" />
     <DailyNewList :items="items" />
@@ -24,17 +24,22 @@ async function handleSubmit(payload: { title: string; content: string; date: str
 
 <style scoped>
 .page {
-  padding: 24px 20px;
+  padding: 14px 14px 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 11px;
 }
 
-.page-title {
-  font-size: 20px;
-  font-weight: 800;
-  color: #29303e;
-  margin: 0;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .error {
