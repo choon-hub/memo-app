@@ -1,9 +1,26 @@
 import { ref } from 'vue'
-import { useSupabase } from './useSupabase'
 import type { WorkoutRecord, WorkoutCategory } from '#shared/types/domain'
 
+export const _workoutStore: WorkoutRecord[] = [
+  {
+    id: 'seed-1',
+    category: 'chest',
+    menu: 'ベンチプレス',
+    intensity: 60,
+    reps: 10,
+    created_at: '2026-06-24T09:00:00Z',
+  },
+  {
+    id: 'seed-2',
+    category: 'back',
+    menu: 'ラットプルダウン',
+    intensity: 50,
+    reps: 12,
+    created_at: '2026-06-23T09:00:00Z',
+  },
+]
+
 export const useWorkout = () => {
-  const client = useSupabase()
   const items = ref<WorkoutRecord[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -14,16 +31,12 @@ export const useWorkout = () => {
     loading.value = true
     error.value = null
     try {
-      let query = client.from('workout_records').select('*')
-      if (category !== undefined) query = query.eq('category', category)
-      const { data, error: dbError } = await query.order('created_at', { ascending: false })
-      if (dbError) {
-        error.value = dbError.message
-      } else {
-        items.value = data as unknown as WorkoutRecord[]
-      }
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Unknown error'
+      const filtered = category
+        ? _workoutStore.filter((r) => r.category === category)
+        : [..._workoutStore]
+      items.value = filtered.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )
     } finally {
       loading.value = false
     }
@@ -39,20 +52,15 @@ export const useWorkout = () => {
     loading.value = true
     error.value = null
     try {
-      const { error: dbError } = await client.from('workout_records').insert({
+      _workoutStore.push({
+        id: crypto.randomUUID(),
         category: payload.category,
         menu: payload.menu,
         intensity: payload.intensity,
         reps: payload.reps,
-        ...(payload.date !== undefined ? { created_at: payload.date } : {}),
+        created_at: payload.date ?? new Date().toISOString(),
       })
-      if (dbError) {
-        error.value = dbError.message
-      } else {
-        await fetchList(lastCategory.value)
-      }
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Unknown error'
+      await fetchList(lastCategory.value)
     } finally {
       loading.value = false
     }
