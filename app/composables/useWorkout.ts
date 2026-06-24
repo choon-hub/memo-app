@@ -25,6 +25,7 @@ export const useWorkout = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const lastCategory = ref<WorkoutCategory | undefined>(undefined)
+  const sortOrder = ref<'asc' | 'desc'>('desc')
 
   async function fetchList(category?: WorkoutCategory) {
     lastCategory.value = category
@@ -34,12 +35,18 @@ export const useWorkout = () => {
       const filtered = category
         ? _workoutStore.filter((r) => r.category === category)
         : [..._workoutStore]
-      items.value = filtered.sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      )
+      items.value = filtered.sort((a, b) => {
+        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        return sortOrder.value === 'desc' ? -diff : diff
+      })
     } finally {
       loading.value = false
     }
+  }
+
+  async function toggleSortOrder() {
+    sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'
+    await fetchList(lastCategory.value)
   }
 
   async function create(payload: {
@@ -66,5 +73,5 @@ export const useWorkout = () => {
     }
   }
 
-  return { items, loading, error, fetchList, create }
+  return { items, loading, error, sortOrder, fetchList, toggleSortOrder, create }
 }

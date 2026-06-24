@@ -32,6 +32,42 @@ describe('useTopics', () => {
     })
   })
 
+  describe('toggleSortOrder()', () => {
+    it('defaults sortOrder to desc', () => {
+      const { sortOrder } = useTopics()
+      expect(sortOrder.value).toBe('desc')
+    })
+
+    it('switches to asc and re-sorts the list', async () => {
+      _topicsStore.push(
+        { id: '1', content: 'Topic A', created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Topic B', created_at: '2024-01-02T00:00:00Z' },
+      )
+
+      const { items, sortOrder, fetchList, toggleSortOrder } = useTopics()
+      await fetchList()
+      expect(items.value[0].id).toBe('2')
+
+      await toggleSortOrder()
+      expect(sortOrder.value).toBe('asc')
+      expect(items.value[0].id).toBe('1')
+    })
+
+    it('toggles back to desc', async () => {
+      _topicsStore.push(
+        { id: '1', content: 'Topic A', created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Topic B', created_at: '2024-01-02T00:00:00Z' },
+      )
+
+      const { items, sortOrder, fetchList, toggleSortOrder } = useTopics()
+      await fetchList()
+      await toggleSortOrder()
+      await toggleSortOrder()
+      expect(sortOrder.value).toBe('desc')
+      expect(items.value[0].id).toBe('2')
+    })
+  })
+
   describe('create()', () => {
     it('adds a new record and refreshes the list', async () => {
       const { items, error, loading, create } = useTopics()

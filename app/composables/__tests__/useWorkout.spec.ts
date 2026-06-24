@@ -93,6 +93,70 @@ describe('useWorkout', () => {
     })
   })
 
+  describe('toggleSortOrder()', () => {
+    it('defaults sortOrder to desc', () => {
+      const { sortOrder } = useWorkout()
+      expect(sortOrder.value).toBe('desc')
+    })
+
+    it('switches to asc and re-sorts the list', async () => {
+      _workoutStore.push(
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'bench press',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          category: 'chest',
+          menu: 'dumbbell fly',
+          intensity: 20,
+          reps: 12,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      )
+
+      const { items, sortOrder, fetchList, toggleSortOrder } = useWorkout()
+      await fetchList()
+      expect(items.value[0].id).toBe('2')
+
+      await toggleSortOrder()
+      expect(sortOrder.value).toBe('asc')
+      expect(items.value[0].id).toBe('1')
+    })
+
+    it('preserves the active category filter when toggling sort', async () => {
+      _workoutStore.push(
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'bench press',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          category: 'back',
+          menu: 'pull up',
+          intensity: 0,
+          reps: 8,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      )
+
+      const { items, fetchList, toggleSortOrder } = useWorkout()
+      await fetchList('chest')
+      expect(items.value).toHaveLength(1)
+
+      await toggleSortOrder()
+      expect(items.value.every((r) => r.category === 'chest')).toBe(true)
+    })
+  })
+
   describe('create()', () => {
     it('adds a new record and refreshes the list', async () => {
       const { items, error, loading, create } = useWorkout()

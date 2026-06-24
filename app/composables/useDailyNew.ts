@@ -14,17 +14,24 @@ export const useDailyNew = () => {
   const items = ref<DailyNew[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const sortOrder = ref<'asc' | 'desc'>('desc')
 
   async function fetchList() {
     loading.value = true
     error.value = null
     try {
-      items.value = [..._dailyNewStore].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      )
+      items.value = [..._dailyNewStore].sort((a, b) => {
+        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        return sortOrder.value === 'desc' ? -diff : diff
+      })
     } finally {
       loading.value = false
     }
+  }
+
+  async function toggleSortOrder() {
+    sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'
+    await fetchList()
   }
 
   async function create(payload: { title: string; content: string; date?: string }) {
@@ -43,5 +50,5 @@ export const useDailyNew = () => {
     }
   }
 
-  return { items, loading, error, fetchList, create }
+  return { items, loading, error, sortOrder, fetchList, toggleSortOrder, create }
 }
