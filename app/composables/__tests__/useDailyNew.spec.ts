@@ -32,6 +32,42 @@ describe('useDailyNew', () => {
     })
   })
 
+  describe('toggleSortOrder()', () => {
+    it('defaults sortOrder to desc', () => {
+      const { sortOrder } = useDailyNew()
+      expect(sortOrder.value).toBe('desc')
+    })
+
+    it('switches to asc and re-sorts the list', async () => {
+      _dailyNewStore.push(
+        { id: '1', title: 'Older', content: 'C1', created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', title: 'Newer', content: 'C2', created_at: '2024-01-02T00:00:00Z' },
+      )
+
+      const { items, sortOrder, fetchList, toggleSortOrder } = useDailyNew()
+      await fetchList()
+      expect(items.value[0].id).toBe('2')
+
+      await toggleSortOrder()
+      expect(sortOrder.value).toBe('asc')
+      expect(items.value[0].id).toBe('1')
+    })
+
+    it('toggles back to desc', async () => {
+      _dailyNewStore.push(
+        { id: '1', title: 'Older', content: 'C1', created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', title: 'Newer', content: 'C2', created_at: '2024-01-02T00:00:00Z' },
+      )
+
+      const { items, sortOrder, fetchList, toggleSortOrder } = useDailyNew()
+      await fetchList()
+      await toggleSortOrder()
+      await toggleSortOrder()
+      expect(sortOrder.value).toBe('desc')
+      expect(items.value[0].id).toBe('2')
+    })
+  })
+
   describe('create()', () => {
     it('adds a new record and refreshes the list', async () => {
       const { items, error, loading, create } = useDailyNew()

@@ -23,6 +23,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ['.nuxt/', 'dist/', 'node_modules/'],
+    ignores: ['.nuxt/', '.claude/', 'dist/', 'node_modules/'],
   },
 )
