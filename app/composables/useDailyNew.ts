@@ -1,9 +1,16 @@
 import { ref } from 'vue'
-import { useSupabase } from './useSupabase'
 import type { DailyNew } from '#shared/types/domain'
 
+export const _dailyNewStore: DailyNew[] = [
+  {
+    id: 'seed-1',
+    title: '初めての発見',
+    content: '今日は新しいことを学んだ',
+    created_at: '2026-06-24T09:00:00Z',
+  },
+]
+
 export const useDailyNew = () => {
-  const client = useSupabase()
   const items = ref<DailyNew[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -12,17 +19,9 @@ export const useDailyNew = () => {
     loading.value = true
     error.value = null
     try {
-      const { data, error: dbError } = await client
-        .from('daily_new')
-        .select('*')
-        .order('created_at', { ascending: false })
-      if (dbError) {
-        error.value = dbError.message
-      } else {
-        items.value = data as unknown as DailyNew[]
-      }
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Unknown error'
+      items.value = [..._dailyNewStore].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )
     } finally {
       loading.value = false
     }
@@ -32,18 +31,13 @@ export const useDailyNew = () => {
     loading.value = true
     error.value = null
     try {
-      const { error: dbError } = await client.from('daily_new').insert({
+      _dailyNewStore.push({
+        id: crypto.randomUUID(),
         title: payload.title,
         content: payload.content,
-        ...(payload.date !== undefined ? { created_at: payload.date } : {}),
+        created_at: payload.date ?? new Date().toISOString(),
       })
-      if (dbError) {
-        error.value = dbError.message
-      } else {
-        await fetchList()
-      }
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Unknown error'
+      await fetchList()
     } finally {
       loading.value = false
     }
