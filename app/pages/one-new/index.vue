@@ -4,7 +4,7 @@ import { useDailyNew } from '~/composables/useDailyNew'
 import DailyNewForm from '~/components/DailyNewForm.vue'
 import DailyNewList from '~/components/DailyNewList.vue'
 
-const { items, loading, error, fetchList, create } = useDailyNew()
+const { items, loading, error, sortOrder, fetchList, create, toggleSortOrder } = useDailyNew()
 
 onMounted(fetchList)
 
@@ -18,7 +18,7 @@ async function handleSubmit(payload: { title: string; content: string; date: str
     <h1 class="sr-only">1日1新</h1>
     <div v-if="error" class="error">{{ error }}</div>
     <DailyNewForm :loading="loading" @submit="handleSubmit" />
-    <DailyNewList :items="items" />
+    <DailyNewList :items="items" :sort-order="sortOrder" @toggle-sort="toggleSortOrder" />
   </div>
 </template>
 

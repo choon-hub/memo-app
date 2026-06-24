@@ -3,6 +3,11 @@ import type { DailyNew } from '#shared/types/domain'
 
 defineProps<{
   items: DailyNew[]
+  sortOrder: 'asc' | 'desc'
+}>()
+
+const emit = defineEmits<{
+  toggleSort: []
 }>()
 
 function formatDate(dateStr: string): string {
@@ -16,6 +21,11 @@ function formatDate(dateStr: string): string {
 
 <template>
   <div>
+    <div class="sort-bar">
+      <button type="button" class="sort-btn" @click="emit('toggleSort')">
+        {{ sortOrder === 'desc' ? '新しい順' : '古い順' }}
+      </button>
+    </div>
     <div v-if="items.length === 0" class="empty-state">
       <div class="empty-icon-wrapper">
         <svg
@@ -52,6 +62,29 @@ function formatDate(dateStr: string): string {
 </template>
 
 <style scoped>
+.sort-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.sort-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4754f0;
+  background: rgba(71, 84, 240, 0.08);
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.sort-btn:hover {
+  background: rgba(71, 84, 240, 0.15);
+}
+
 .empty-state {
   display: flex;
   flex-direction: column;

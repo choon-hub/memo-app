@@ -6,7 +6,7 @@ import WorkoutForm from '~/components/WorkoutForm.vue'
 import WorkoutList from '~/components/WorkoutList.vue'
 import type { WorkoutCategory } from '#shared/types/domain'
 
-const { items, loading, error, fetchList, create } = useWorkout()
+const { items, loading, error, sortOrder, fetchList, create, toggleSortOrder } = useWorkout()
 const selectedCategory = ref<WorkoutCategory>('chest')
 const initialized = ref(false)
 
@@ -70,7 +70,7 @@ async function handleSubmit(payload: {
     </template>
     <template v-else>
       <WorkoutForm :loading="loading" @submit="handleSubmit" />
-      <WorkoutList :items="items" />
+      <WorkoutList :items="items" :sort-order="sortOrder" @toggle-sort="toggleSortOrder" />
     </template>
   </div>
 </template>
