@@ -49,8 +49,9 @@ function formatDate(dateStr: string): string {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 48px 0;
-  gap: 12px;
+  padding: 32px 28px 48px;
+  gap: 0;
+  text-align: center;
 }
 
 .empty-icon-wrapper {
@@ -61,48 +62,50 @@ function formatDate(dateStr: string): string {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 22px;
 }
 
 .empty-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 800;
   color: #29303e;
-  margin: 0;
+  margin: 0 0 10px;
+  line-height: 1.3;
 }
 
 .empty-sub {
   font-size: 13px;
-  color: #7c85a2;
+  color: #bab9d0;
   text-align: center;
-  line-height: 1.6;
+  line-height: 1.65;
   margin: 0;
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 9px;
 }
 
 .card {
   background: white;
   border-radius: 16px;
   box-shadow: 0 9px 40px rgba(101, 108, 238, 0.1);
-  padding: 20px;
+  padding: 13px 15px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
 }
 
 .card-content {
-  font-size: 14px;
-  color: #29303e;
-  margin: 0;
-  line-height: 1.5;
+  font-size: 13px;
+  color: #4a4a68;
+  margin: 0 0 6px;
+  line-height: 1.6;
 }
 
 .card-date {
-  font-size: 12px;
+  font-size: 11px;
   color: #bab9d0;
 }
 </style>

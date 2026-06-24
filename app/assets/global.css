@@ -1,0 +1,10 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Nunito', sans-serif;
+  background: #f9f9f9;
+  -webkit-font-smoothing: antialiased;
+}
