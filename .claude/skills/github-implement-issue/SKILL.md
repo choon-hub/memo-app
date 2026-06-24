@@ -1,7 +1,7 @@
 ---
 name: github-implement-issue
 description: Fetches a GitHub Issue by number (title and labels only), explores the codebase autonomously, implements the solution, runs tests and a code review, then commits and pushes to a new branch. Use when the user wants to implement or resolve a specific GitHub Issue number without interactive confirmation.
-allowed-tools: Read, Bash, Task, TodoWrite
+allowed-tools: Bash
 ---
 
 # GitHub Issue Implementation Skill — Orchestrator
@@ -53,19 +53,34 @@ Use the Skill tool to invoke `github-implement`, passing:
 - The Issue number
 - Your one-sentence requirements summary
 
-Wait for it to complete (result: file changes on disk).
+Success: file changes exist in the working tree (`git status` shows modified or new files). Fail: no changes on disk — surface the error and stop.
 
 ### Step 3: Test — invoke `github-test`
 
 Use the Skill tool to invoke `github-test`.
 
-Wait for it to return `Tests: PASS`. If it returns `Tests: FAIL`, surface the failure to the user and stop.
+Expected success output:
+```
+Tests: PASS — all tests and lint clean
+<actual test runner output snippet>
+```
+
+If it returns `Tests: FAIL`, surface the failure output (including the test runner snippet) to the user and stop. Do not proceed to review with failing tests.
 
 ### Step 4: Review — invoke `github-review`
 
 Use the Skill tool to invoke `github-review`, passing your one-sentence requirements summary.
 
-Wait for it to return `Review: PASS`. If it returns `Review: BLOCKED`, surface the finding to the user and stop.
+Expected success output:
+```
+Review: PASS
+  Critical: 0
+  Major: 0
+  Minor: <N> (not blocking)
+  Evidence: <finding or "none">
+```
+
+If it returns `Review: BLOCKED`, surface the finding and its evidence to the user and stop.
 
 ### Step 5: Commit and Push — invoke `github-commit-push`
 

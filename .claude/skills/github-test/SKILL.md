@@ -1,12 +1,12 @@
 ---
 name: github-test
 description: Runs the project's test suite and linter, then fixes any failures. Returns pass/fail result. Use as a sub-step inside github-implement-issue after code changes have been written.
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, TodoWrite
+allowed-tools: Read, Write, Edit, Bash, Grep
 ---
 
 # GitHub Test — Verify Phase
 
-Run tests and lint, fix failures, and report the outcome. No codebase exploration or commits.
+Run tests and lint, fix failures, and report the outcome with actual command output. No codebase exploration or commits.
 
 ## Instructions
 
@@ -35,16 +35,18 @@ fi
 
 ## Output
 
-Report one of:
-
 ```
 Tests: PASS — all tests and lint clean
+---
+<last 20 lines of test runner output>
 ```
 
 or
 
 ```
 Tests: FAIL — <brief description of remaining failures>
+---
+<relevant portion of test runner output showing the failure>
 ```
 
-Stop and surface failures to the caller if they cannot be resolved.
+Stop and surface failures (including the output snippet) to the caller if they cannot be resolved.
