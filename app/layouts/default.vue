@@ -1,5 +1,6 @@
 <template>
   <div class="layout">
+    <AppHeader />
     <main class="content">
       <slot />
     </main>
@@ -18,6 +19,7 @@
 .content {
   flex: 1;
   overflow-y: auto;
+  padding-top: var(--header-height);
   padding-bottom: var(--nav-height);
 }
 </style>
