@@ -9,14 +9,14 @@ export const _topicsStore: Topic[] = [
   },
 ]
 
-export const useTopics = () => {
-  const items = ref<Topic[]>([])
-  const loading = ref(false)
-  const error = ref<string | null>(null)
-  const sortOrder = ref<'asc' | 'desc'>('desc')
+const items = ref<Topic[]>([])
+const loading = ref(false)
+const error = ref<string | null>(null)
+const sortOrder = ref<'asc' | 'desc'>('desc')
 
+export const useTopics = () => {
   async function fetchList() {
-    loading.value = true
+    if (items.value.length === 0) loading.value = true
     error.value = null
     try {
       items.value = [..._topicsStore].sort((a, b) => {
@@ -37,12 +37,16 @@ export const useTopics = () => {
     loading.value = true
     error.value = null
     try {
-      _topicsStore.push({
+      const newItem: Topic = {
         id: crypto.randomUUID(),
         content: payload.content,
         created_at: payload.date ?? new Date().toISOString(),
+      }
+      _topicsStore.push(newItem)
+      items.value = [...items.value, newItem].sort((a, b) => {
+        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        return sortOrder.value === 'desc' ? -diff : diff
       })
-      await fetchList()
     } finally {
       loading.value = false
     }

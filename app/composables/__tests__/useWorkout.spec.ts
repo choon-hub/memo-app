@@ -4,6 +4,12 @@ import { useWorkout, _workoutStore } from '../useWorkout'
 describe('useWorkout', () => {
   beforeEach(() => {
     _workoutStore.length = 0
+    const { items, loading, error, sortOrder, lastCategory } = useWorkout()
+    items.value = []
+    loading.value = false
+    error.value = null
+    sortOrder.value = 'desc'
+    lastCategory.value = undefined
   })
 
   describe('fetchList()', () => {

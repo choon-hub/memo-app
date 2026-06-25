@@ -10,14 +10,14 @@ export const _dailyNewStore: DailyNew[] = [
   },
 ]
 
-export const useDailyNew = () => {
-  const items = ref<DailyNew[]>([])
-  const loading = ref(false)
-  const error = ref<string | null>(null)
-  const sortOrder = ref<'asc' | 'desc'>('desc')
+const items = ref<DailyNew[]>([])
+const loading = ref(false)
+const error = ref<string | null>(null)
+const sortOrder = ref<'asc' | 'desc'>('desc')
 
+export const useDailyNew = () => {
   async function fetchList() {
-    loading.value = true
+    if (items.value.length === 0) loading.value = true
     error.value = null
     try {
       items.value = [..._dailyNewStore].sort((a, b) => {
@@ -38,13 +38,17 @@ export const useDailyNew = () => {
     loading.value = true
     error.value = null
     try {
-      _dailyNewStore.push({
+      const newItem: DailyNew = {
         id: crypto.randomUUID(),
         title: payload.title,
         content: payload.content,
         created_at: payload.date ?? new Date().toISOString(),
+      }
+      _dailyNewStore.push(newItem)
+      items.value = [...items.value, newItem].sort((a, b) => {
+        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        return sortOrder.value === 'desc' ? -diff : diff
       })
-      await fetchList()
     } finally {
       loading.value = false
     }
