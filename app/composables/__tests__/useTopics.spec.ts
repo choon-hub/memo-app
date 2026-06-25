@@ -4,6 +4,11 @@ import { useTopics, _topicsStore } from '../useTopics'
 describe('useTopics', () => {
   beforeEach(() => {
     _topicsStore.length = 0
+    const { items, loading, error, sortOrder } = useTopics()
+    items.value = []
+    loading.value = false
+    error.value = null
+    sortOrder.value = 'desc'
   })
 
   describe('fetchList()', () => {
@@ -89,7 +94,8 @@ describe('useTopics', () => {
     it('new item appears first when it has the latest created_at', async () => {
       _topicsStore.push({ id: 'old', content: 'Old topic', created_at: '2024-01-01T00:00:00Z' })
 
-      const { items, create } = useTopics()
+      const { items, fetchList, create } = useTopics()
+      await fetchList()
       await create({ content: 'New topic', date: '2024-01-02T00:00:00Z' })
 
       expect(items.value[0].content).toBe('New topic')

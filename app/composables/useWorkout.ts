@@ -20,16 +20,16 @@ export const _workoutStore: WorkoutRecord[] = [
   },
 ]
 
-export const useWorkout = () => {
-  const items = ref<WorkoutRecord[]>([])
-  const loading = ref(false)
-  const error = ref<string | null>(null)
-  const lastCategory = ref<WorkoutCategory | undefined>(undefined)
-  const sortOrder = ref<'asc' | 'desc'>('desc')
+const items = ref<WorkoutRecord[]>([])
+const loading = ref(false)
+const error = ref<string | null>(null)
+const lastCategory = ref<WorkoutCategory | undefined>(undefined)
+const sortOrder = ref<'asc' | 'desc'>('desc')
 
+export const useWorkout = () => {
   async function fetchList(category?: WorkoutCategory) {
     lastCategory.value = category
-    loading.value = true
+    if (items.value.length === 0) loading.value = true
     error.value = null
     try {
       const filtered = category
@@ -59,19 +59,25 @@ export const useWorkout = () => {
     loading.value = true
     error.value = null
     try {
-      _workoutStore.push({
+      const newItem: WorkoutRecord = {
         id: crypto.randomUUID(),
         category: payload.category,
         menu: payload.menu,
         intensity: payload.intensity,
         reps: payload.reps,
         created_at: payload.date ?? new Date().toISOString(),
-      })
-      await fetchList(lastCategory.value)
+      }
+      _workoutStore.push(newItem)
+      if (!lastCategory.value || newItem.category === lastCategory.value) {
+        items.value = [...items.value, newItem].sort((a, b) => {
+          const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          return sortOrder.value === 'desc' ? -diff : diff
+        })
+      }
     } finally {
       loading.value = false
     }
   }
 
-  return { items, loading, error, sortOrder, fetchList, toggleSortOrder, create }
+  return { items, loading, error, sortOrder, lastCategory, fetchList, toggleSortOrder, create }
 }

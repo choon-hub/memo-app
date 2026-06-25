@@ -4,6 +4,11 @@ import { useDailyNew, _dailyNewStore } from '../useDailyNew'
 describe('useDailyNew', () => {
   beforeEach(() => {
     _dailyNewStore.length = 0
+    const { items, loading, error, sortOrder } = useDailyNew()
+    items.value = []
+    loading.value = false
+    error.value = null
+    sortOrder.value = 'desc'
   })
 
   describe('fetchList()', () => {
@@ -94,7 +99,8 @@ describe('useDailyNew', () => {
         created_at: '2024-01-01T00:00:00Z',
       })
 
-      const { items, create } = useDailyNew()
+      const { items, fetchList, create } = useDailyNew()
+      await fetchList()
       await create({ title: 'New', content: 'New', date: '2024-01-02T00:00:00Z' })
 
       expect(items.value[0].title).toBe('New')
