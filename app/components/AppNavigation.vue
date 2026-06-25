@@ -62,7 +62,7 @@ const navItems = [
   left: 0;
   right: 0;
   z-index: 10;
-  height: 72px;
+  height: var(--nav-height);
   background: white;
   border-top: 1px solid #e0dfe9;
   display: flex;

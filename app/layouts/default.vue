@@ -18,6 +18,6 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 72px;
+  padding-bottom: var(--nav-height);
 }
 </style>

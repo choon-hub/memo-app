@@ -22,6 +22,9 @@ export default defineNuxtConfig({
   alias: {
     '#shared': resolve('./shared'),
   },
+  routeRules: {
+    '/': { redirect: '/one-new' },
+  },
   runtimeConfig: {
     public: {
       supabaseUrl: process.env.SUPABASE_URL ?? '',
