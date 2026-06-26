@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { useAsyncData } from '#app'
 import { useTopics } from '~/composables/useTopics'
 import TopicForm from '~/components/TopicForm.vue'
 import TopicList from '~/components/TopicList.vue'
 
 const { items, loading, error, sortOrder, fetchList, create, update, toggleSortOrder } = useTopics()
 
-onMounted(fetchList)
+await useAsyncData('topics', fetchList)
 
 async function handleSubmit(payload: { content: string; date: string }) {
   await create({ ...payload, date: `${payload.date}T00:00:00.000Z` })

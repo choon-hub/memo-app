@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { useAsyncData } from '#app'
 import { useDailyNew } from '~/composables/useDailyNew'
 import DailyNewForm from '~/components/DailyNewForm.vue'
 import DailyNewList from '~/components/DailyNewList.vue'
 
 const { items, loading, error, sortOrder, fetchList, create, toggleSortOrder } = useDailyNew()
 
-onMounted(fetchList)
+await useAsyncData('daily-new', fetchList)
 
 async function handleSubmit(payload: { title: string; content: string; date: string }) {
   await create({ ...payload, date: `${payload.date}T00:00:00.000Z` })
