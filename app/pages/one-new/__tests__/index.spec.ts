@@ -1,7 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
-import { ref } from 'vue'
+import { mount, flushPromises } from '@vue/test-utils'
+import { defineComponent, h, Suspense, ref } from 'vue'
 import OneNewPage from '../index.vue'
+
+vi.mock('#app/composables/asyncData', async () => {
+  const { ref } = await import('vue')
+  return {
+    useAsyncData: vi.fn(async (_key: unknown, fn?: () => unknown) => {
+      if (typeof fn === 'function') await fn()
+      return { data: ref(null), pending: ref(false), refresh: vi.fn(), execute: vi.fn() }
+    }),
+    useLazyAsyncData: vi.fn(),
+    useNuxtData: vi.fn(() => ({ data: ref(null) })),
+    refreshNuxtData: vi.fn(),
+    clearNuxtData: vi.fn(),
+    createUseAsyncData: vi.fn(),
+  }
+})
 
 const mockFetchList = vi.fn()
 const mockCreate = vi.fn()
@@ -19,6 +34,14 @@ vi.mock('~/composables/useDailyNew', () => ({
   })),
 }))
 
+async function mountPage() {
+  const wrapper = mount(
+    defineComponent({ render: () => h(Suspense, null, { default: () => h(OneNewPage) }) }),
+  )
+  await flushPromises()
+  return wrapper
+}
+
 describe('one-new page', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -27,27 +50,27 @@ describe('one-new page', () => {
     mockError.value = null
   })
 
-  it('calls fetchList on mount', () => {
-    mount(OneNewPage)
+  it('calls fetchList on mount', async () => {
+    await mountPage()
     expect(mockFetchList).toHaveBeenCalledOnce()
   })
 
-  it('shows error message when error is set', () => {
+  it('shows error message when error is set', async () => {
     mockError.value = 'データの取得に失敗しました'
-    const wrapper = mount(OneNewPage)
+    const wrapper = await mountPage()
     expect(wrapper.text()).toContain('データの取得に失敗しました')
   })
 
-  it('renders DailyNewList with items from composable', () => {
+  it('renders DailyNewList with items from composable', async () => {
     mockItems.value = [
       { id: '1', title: 'テスト', content: '内容', created_at: '2024-01-01T00:00:00Z' },
     ]
-    const wrapper = mount(OneNewPage)
+    const wrapper = await mountPage()
     expect(wrapper.text()).toContain('テスト')
   })
 
   it('calls create with ISO timestamp when form submits', async () => {
-    const wrapper = mount(OneNewPage)
+    const wrapper = await mountPage()
     const form = wrapper.findComponent({ name: 'DailyNewForm' })
     await form.vm.$emit('submit', { title: 'タイトル', content: '内容', date: '2024-01-15' })
     expect(mockCreate).toHaveBeenCalledWith({
