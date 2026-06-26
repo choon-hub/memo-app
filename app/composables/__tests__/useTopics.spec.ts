@@ -73,6 +73,44 @@ describe('useTopics', () => {
     })
   })
 
+  describe('update()', () => {
+    it('updates the content of an existing item', async () => {
+      _topicsStore.push({ id: '1', content: 'Original', created_at: '2024-01-01T00:00:00Z' })
+
+      const { items, loading, error, fetchList, update } = useTopics()
+      await fetchList()
+      await update('1', { content: 'Updated' })
+
+      expect(error.value).toBeNull()
+      expect(loading.value).toBe(false)
+      expect(items.value[0].content).toBe('Updated')
+    })
+
+    it('preserves sort order (desc) after update', async () => {
+      _topicsStore.push(
+        { id: '1', content: 'Older', created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Newer', created_at: '2024-01-02T00:00:00Z' },
+      )
+
+      const { items, fetchList, update } = useTopics()
+      await fetchList()
+      await update('2', { content: 'Newer updated' })
+
+      expect(items.value[0].id).toBe('2')
+      expect(items.value[0].content).toBe('Newer updated')
+    })
+
+    it('does nothing when id is not found', async () => {
+      _topicsStore.push({ id: '1', content: 'Original', created_at: '2024-01-01T00:00:00Z' })
+
+      const { items, fetchList, update } = useTopics()
+      await fetchList()
+      await update('nonexistent', { content: 'Updated' })
+
+      expect(items.value[0].content).toBe('Original')
+    })
+  })
+
   describe('create()', () => {
     it('adds a new record and refreshes the list', async () => {
       const { items, error, loading, create } = useTopics()

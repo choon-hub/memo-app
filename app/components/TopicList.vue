@@ -1,14 +1,20 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { Topic } from '#shared/types/domain'
 
-defineProps<{
+const props = defineProps<{
   items: Topic[]
   sortOrder: 'asc' | 'desc'
+  loading: boolean
 }>()
 
 const emit = defineEmits<{
   toggleSort: []
+  update: [id: string, content: string]
 }>()
+
+const editingId = ref<string | null>(null)
+const editContent = ref('')
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('ja-JP', {
@@ -16,6 +22,23 @@ function formatDate(dateStr: string): string {
     month: 'numeric',
     day: 'numeric',
   })
+}
+
+function startEdit(item: Topic) {
+  editingId.value = item.id
+  editContent.value = item.content
+}
+
+function cancelEdit() {
+  editingId.value = null
+  editContent.value = ''
+}
+
+function saveEdit() {
+  if (!editContent.value.trim() || !editingId.value) return
+  emit('update', editingId.value, editContent.value.trim())
+  editingId.value = null
+  editContent.value = ''
 }
 </script>
 
@@ -47,8 +70,29 @@ function formatDate(dateStr: string): string {
     </div>
     <div v-else class="list">
       <div v-for="item in items" :key="item.id" class="card">
-        <p class="card-content">{{ item.content }}</p>
-        <span class="card-date">{{ formatDate(item.created_at) }}</span>
+        <template v-if="editingId === item.id">
+          <textarea v-model="editContent" class="edit-textarea" :disabled="props.loading" />
+          <div class="edit-actions">
+            <button
+              type="button"
+              class="save-btn"
+              :disabled="!editContent.trim() || props.loading"
+              @click="saveEdit"
+            >
+              保存
+            </button>
+            <button type="button" class="cancel-btn" :disabled="props.loading" @click="cancelEdit">
+              キャンセル
+            </button>
+          </div>
+        </template>
+        <template v-else>
+          <p class="card-content">{{ item.content }}</p>
+          <div class="card-footer">
+            <span class="card-date">{{ formatDate(item.created_at) }}</span>
+            <button type="button" class="edit-btn" @click="startEdit(item)">編集</button>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -137,8 +181,103 @@ function formatDate(dateStr: string): string {
   line-height: 1.6;
 }
 
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .card-date {
   font-size: 11px;
   color: #bab9d0;
+}
+
+.edit-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: #4754f0;
+  background: rgba(71, 84, 240, 0.08);
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.edit-btn:hover {
+  background: rgba(71, 84, 240, 0.15);
+}
+
+.edit-textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid #ecf1f4;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #4a4a68;
+  resize: vertical;
+  min-height: 72px;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
+
+.edit-textarea:focus {
+  outline: none;
+  border-color: #4754f0;
+}
+
+.edit-textarea:disabled {
+  opacity: 0.6;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.save-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: #4754f0;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.save-btn:hover:not(:disabled) {
+  background: #3a45d4;
+}
+
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a4a68;
+  background: rgba(74, 74, 104, 0.08);
+  border: none;
+  border-radius: 4px;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: rgba(74, 74, 104, 0.15);
+}
+
+.cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>
