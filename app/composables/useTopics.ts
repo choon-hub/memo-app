@@ -52,5 +52,22 @@ export const useTopics = () => {
     }
   }
 
-  return { items, loading, error, sortOrder, fetchList, toggleSortOrder, create }
+  async function update(id: string, payload: { content: string }) {
+    loading.value = true
+    error.value = null
+    try {
+      const idx = _topicsStore.findIndex((t) => t.id === id)
+      if (idx !== -1) {
+        _topicsStore[idx] = { ..._topicsStore[idx], content: payload.content }
+      }
+      items.value = [..._topicsStore].sort((a, b) => {
+        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        return sortOrder.value === 'desc' ? -diff : diff
+      })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return { items, loading, error, sortOrder, fetchList, toggleSortOrder, create, update }
 }
