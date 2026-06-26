@@ -55,4 +55,17 @@ describe('WorkoutList', () => {
     expect(wrapper.text()).toContain('胸')
     expect(wrapper.text()).toContain('背中')
   })
+
+  it('renders a copy button for each item', () => {
+    const wrapper = mount(WorkoutList, { props: { items: mockItems, sortOrder: 'desc' } })
+    expect(wrapper.findAll('.copy-btn')).toHaveLength(2)
+  })
+
+  it('emits copy event with the correct record when copy button is clicked', async () => {
+    const wrapper = mount(WorkoutList, { props: { items: mockItems, sortOrder: 'desc' } })
+    await wrapper.findAll('.copy-btn')[0].trigger('click')
+    const emitted = wrapper.emitted('copy')
+    expect(emitted).toBeTruthy()
+    expect(emitted![0][0]).toEqual(mockItems[0])
+  })
 })

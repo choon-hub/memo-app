@@ -4,11 +4,12 @@ import { useWorkout } from '~/composables/useWorkout'
 import WorkoutCategoryTabs from '~/components/WorkoutCategoryTabs.vue'
 import WorkoutForm from '~/components/WorkoutForm.vue'
 import WorkoutList from '~/components/WorkoutList.vue'
-import type { WorkoutCategory } from '#shared/types/domain'
+import type { WorkoutCategory, WorkoutRecord } from '#shared/types/domain'
 
 const { items, loading, error, sortOrder, fetchList, create, toggleSortOrder } = useWorkout()
 const selectedCategory = ref<WorkoutCategory>('chest')
 const initialized = ref(false)
+const prefill = ref<WorkoutRecord | undefined>(undefined)
 
 onMounted(async () => {
   await fetchList(selectedCategory.value)
@@ -36,6 +37,11 @@ async function handleSubmit(payload: {
     reps: payload.reps,
     date: `${payload.date}T00:00:00.000Z`,
   })
+}
+
+function handleCopy(record: WorkoutRecord) {
+  selectedCategory.value = record.category
+  prefill.value = { ...record }
 }
 </script>
 
@@ -69,8 +75,13 @@ async function handleSubmit(payload: {
       </div>
     </template>
     <template v-else>
-      <WorkoutForm :loading="loading" @submit="handleSubmit" />
-      <WorkoutList :items="items" :sort-order="sortOrder" @toggle-sort="toggleSortOrder" />
+      <WorkoutForm :loading="loading" :prefill="prefill" @submit="handleSubmit" />
+      <WorkoutList
+        :items="items"
+        :sort-order="sortOrder"
+        @toggle-sort="toggleSortOrder"
+        @copy="handleCopy"
+      />
     </template>
   </div>
 </template>

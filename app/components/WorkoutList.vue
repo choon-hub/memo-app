@@ -8,6 +8,7 @@ defineProps<{
 
 const emit = defineEmits<{
   toggleSort: []
+  copy: [item: WorkoutRecord]
 }>()
 
 const categoryLabels: Record<WorkoutCategory, string> = {
@@ -63,7 +64,10 @@ function formatDate(dateStr: string): string {
           <span class="card-badge">{{ categoryLabels[item.category] }}</span>
         </div>
         <span class="card-stats">{{ item.intensity }}kg × {{ item.reps }}回</span>
-        <span class="card-date">{{ formatDate(item.created_at) }}</span>
+        <div class="card-footer">
+          <span class="card-date">{{ formatDate(item.created_at) }}</span>
+          <button type="button" class="copy-btn" @click="emit('copy', item)">コピー</button>
+        </div>
       </div>
     </div>
   </div>
@@ -174,8 +178,31 @@ function formatDate(dateStr: string): string {
   margin-bottom: 5px;
 }
 
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .card-date {
   font-size: 11px;
   color: #bab9d0;
+}
+
+.copy-btn {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4754f0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.copy-btn:hover {
+  opacity: 1;
 }
 </style>
