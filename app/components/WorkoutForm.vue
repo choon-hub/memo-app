@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import type { WorkoutRecord } from '#shared/types/domain'
 
 const props = defineProps<{
   loading?: boolean
+  prefill?: WorkoutRecord
 }>()
 
 const emit = defineEmits<{
@@ -13,6 +15,16 @@ const menu = ref('')
 const intensity = ref('')
 const reps = ref('')
 const date = ref('')
+
+watch(
+  () => props.prefill,
+  (record) => {
+    if (!record) return
+    menu.value = record.menu
+    intensity.value = String(record.intensity)
+    reps.value = String(record.reps)
+  },
+)
 
 const isDisabled = computed(() => {
   const intensityNum = Number(intensity.value)
