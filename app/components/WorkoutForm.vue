@@ -5,6 +5,7 @@ import type { WorkoutRecord } from '#shared/types/domain'
 const props = defineProps<{
   loading?: boolean
   prefill?: WorkoutRecord
+  menuSuggestions?: string[]
 }>()
 
 const emit = defineEmits<{
@@ -63,7 +64,17 @@ function handleSubmit() {
     <div class="fields">
       <div class="field field-menu">
         <label for="wo-menu" class="label">メニュー</label>
-        <input id="wo-menu" v-model="menu" type="text" class="input" placeholder="種目名" />
+        <input
+          id="wo-menu"
+          v-model="menu"
+          type="text"
+          class="input"
+          placeholder="種目名"
+          list="wo-menu-list"
+        />
+        <datalist id="wo-menu-list">
+          <option v-for="s in props.menuSuggestions" :key="s" :value="s" />
+        </datalist>
       </div>
       <div class="field field-intensity">
         <label for="wo-intensity" class="label">重量 kg</label>

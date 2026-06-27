@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { WorkoutRecord, WorkoutCategory } from '#shared/types/domain'
 
 export const _workoutStore: WorkoutRecord[] = [
@@ -79,5 +79,21 @@ export const useWorkout = () => {
     }
   }
 
-  return { items, loading, error, sortOrder, lastCategory, fetchList, toggleSortOrder, create }
+  const menuSuggestions = computed(() =>
+    [...new Set([...items.value, ..._workoutStore].map((r) => r.menu))].sort((a, b) =>
+      a.localeCompare(b),
+    ),
+  )
+
+  return {
+    items,
+    loading,
+    error,
+    sortOrder,
+    lastCategory,
+    menuSuggestions,
+    fetchList,
+    toggleSortOrder,
+    create,
+  }
 }

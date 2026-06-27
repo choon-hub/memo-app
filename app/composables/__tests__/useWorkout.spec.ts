@@ -163,6 +163,74 @@ describe('useWorkout', () => {
     })
   })
 
+  describe('menuSuggestions', () => {
+    it('returns empty array when items is empty', () => {
+      const { menuSuggestions } = useWorkout()
+      expect(menuSuggestions.value).toEqual([])
+    })
+
+    it('returns unique sorted menu names from items', async () => {
+      _workoutStore.push(
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'スクワット',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          category: 'back',
+          menu: 'ベンチプレス',
+          intensity: 50,
+          reps: 12,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+        {
+          id: '3',
+          category: 'chest',
+          menu: 'スクワット',
+          intensity: 70,
+          reps: 8,
+          created_at: '2024-01-03T00:00:00Z',
+        },
+      )
+
+      const { menuSuggestions, fetchList } = useWorkout()
+      await fetchList()
+
+      expect(menuSuggestions.value).toEqual(['スクワット', 'ベンチプレス'])
+    })
+
+    it('includes menus from all categories, not just the active filter', async () => {
+      _workoutStore.push(
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          category: 'back',
+          menu: 'ラットプルダウン',
+          intensity: 50,
+          reps: 12,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      )
+
+      const { menuSuggestions, fetchList } = useWorkout()
+      await fetchList('chest')
+
+      expect(menuSuggestions.value).toContain('ベンチプレス')
+      expect(menuSuggestions.value).toContain('ラットプルダウン')
+    })
+  })
+
   describe('create()', () => {
     it('adds a new record and refreshes the list', async () => {
       const { items, error, loading, create } = useWorkout()
