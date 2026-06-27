@@ -7,7 +7,8 @@ import WorkoutForm from '~/components/WorkoutForm.vue'
 import WorkoutList from '~/components/WorkoutList.vue'
 import type { WorkoutCategory, WorkoutRecord } from '#shared/types/domain'
 
-const { items, loading, error, sortOrder, fetchList, create, toggleSortOrder } = useWorkout()
+const { items, loading, error, sortOrder, menuSuggestions, fetchList, create, toggleSortOrder } =
+  useWorkout()
 const selectedCategory = ref<WorkoutCategory>('chest')
 const prefill = ref<WorkoutRecord | undefined>(undefined)
 
@@ -49,7 +50,12 @@ function handleCopy(record: WorkoutRecord) {
       @update:model-value="handleCategoryChange"
     />
     <div v-if="error" class="error">{{ error }}</div>
-    <WorkoutForm :loading="loading" :prefill="prefill" @submit="handleSubmit" />
+    <WorkoutForm
+      :loading="loading"
+      :prefill="prefill"
+      :menu-suggestions="menuSuggestions"
+      @submit="handleSubmit"
+    />
     <WorkoutList
       :items="items"
       :sort-order="sortOrder"
