@@ -54,5 +54,39 @@ export const useDailyNew = () => {
     }
   }
 
-  return { items, loading, error, sortOrder, fetchList, toggleSortOrder, create }
+  async function update(id: string, payload: { title: string; content: string }) {
+    loading.value = true
+    error.value = null
+    try {
+      const idx = _dailyNewStore.findIndex((d) => d.id === id)
+      if (idx !== -1) {
+        _dailyNewStore[idx] = { ..._dailyNewStore[idx], ...payload }
+      }
+      items.value = [..._dailyNewStore].sort((a, b) => {
+        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        return sortOrder.value === 'desc' ? -diff : diff
+      })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function remove(id: string) {
+    loading.value = true
+    error.value = null
+    try {
+      const idx = _dailyNewStore.findIndex((d) => d.id === id)
+      if (idx !== -1) {
+        _dailyNewStore.splice(idx, 1)
+      }
+      items.value = [..._dailyNewStore].sort((a, b) => {
+        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        return sortOrder.value === 'desc' ? -diff : diff
+      })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return { items, loading, error, sortOrder, fetchList, toggleSortOrder, create, update, remove }
 }
