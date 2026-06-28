@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const props = defineProps<{
   loading?: boolean
@@ -13,6 +13,10 @@ const title = ref('')
 const content = ref('')
 const date = ref('')
 
+onMounted(() => {
+  date.value = new Date().toLocaleDateString('en-CA')
+})
+
 const isDisabled = computed(
   () => !title.value.trim() || !content.value.trim() || !date.value || props.loading,
 )
@@ -22,7 +26,7 @@ function handleSubmit() {
   emit('submit', { title: title.value.trim(), content: content.value.trim(), date: date.value })
   title.value = ''
   content.value = ''
-  date.value = ''
+  date.value = new Date().toLocaleDateString('en-CA')
 }
 </script>
 
