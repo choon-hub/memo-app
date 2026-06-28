@@ -73,6 +73,103 @@ describe('useDailyNew', () => {
     })
   })
 
+  describe('update()', () => {
+    it('updates the title and content of an existing item', async () => {
+      _dailyNewStore.push({
+        id: '1',
+        title: 'Original title',
+        content: 'Original content',
+        created_at: '2024-01-01T00:00:00Z',
+      })
+
+      const { items, loading, error, fetchList, update } = useDailyNew()
+      await fetchList()
+      await update('1', { title: 'Updated title', content: 'Updated content' })
+
+      expect(error.value).toBeNull()
+      expect(loading.value).toBe(false)
+      expect(items.value[0].title).toBe('Updated title')
+      expect(items.value[0].content).toBe('Updated content')
+    })
+
+    it('preserves sort order (desc) after update', async () => {
+      _dailyNewStore.push(
+        { id: '1', title: 'Older', content: 'C1', created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', title: 'Newer', content: 'C2', created_at: '2024-01-02T00:00:00Z' },
+      )
+
+      const { items, fetchList, update } = useDailyNew()
+      await fetchList()
+      await update('2', { title: 'Newer updated', content: 'C2 updated' })
+
+      expect(items.value[0].id).toBe('2')
+      expect(items.value[0].title).toBe('Newer updated')
+    })
+
+    it('does nothing when id is not found', async () => {
+      _dailyNewStore.push({
+        id: '1',
+        title: 'Original title',
+        content: 'Original content',
+        created_at: '2024-01-01T00:00:00Z',
+      })
+
+      const { items, fetchList, update } = useDailyNew()
+      await fetchList()
+      await update('nonexistent', { title: 'Updated', content: 'Updated' })
+
+      expect(items.value[0].title).toBe('Original title')
+    })
+  })
+
+  describe('remove()', () => {
+    it('removes the item from the list', async () => {
+      _dailyNewStore.push(
+        { id: '1', title: 'To remove', content: 'C1', created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', title: 'Keep', content: 'C2', created_at: '2024-01-02T00:00:00Z' },
+      )
+
+      const { items, loading, error, fetchList, remove } = useDailyNew()
+      await fetchList()
+      await remove('1')
+
+      expect(error.value).toBeNull()
+      expect(loading.value).toBe(false)
+      expect(items.value).toHaveLength(1)
+      expect(items.value[0].id).toBe('2')
+    })
+
+    it('preserves sort order (desc) after remove', async () => {
+      _dailyNewStore.push(
+        { id: '1', title: 'Oldest', content: 'C1', created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', title: 'Middle', content: 'C2', created_at: '2024-01-02T00:00:00Z' },
+        { id: '3', title: 'Newest', content: 'C3', created_at: '2024-01-03T00:00:00Z' },
+      )
+
+      const { items, fetchList, remove } = useDailyNew()
+      await fetchList()
+      await remove('2')
+
+      expect(items.value[0].id).toBe('3')
+      expect(items.value[1].id).toBe('1')
+    })
+
+    it('does nothing when id is not found', async () => {
+      _dailyNewStore.push({
+        id: '1',
+        title: 'Keep',
+        content: 'C1',
+        created_at: '2024-01-01T00:00:00Z',
+      })
+
+      const { items, fetchList, remove } = useDailyNew()
+      await fetchList()
+      await remove('nonexistent')
+
+      expect(items.value).toHaveLength(1)
+    })
+  })
+
   describe('create()', () => {
     it('adds a new record and refreshes the list', async () => {
       const { items, error, loading, create } = useDailyNew()
