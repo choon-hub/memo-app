@@ -10,6 +10,7 @@ describe('TopicForm', () => {
 
   it('has submit button disabled when only content is filled', async () => {
     const wrapper = mount(TopicForm)
+    await wrapper.find('input[type="date"]').setValue('')
     await wrapper.find('textarea').setValue('今日あったこと')
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
   })
@@ -43,7 +44,9 @@ describe('TopicForm', () => {
     await wrapper.find('input[type="date"]').setValue('2024-01-15')
     await wrapper.find('form').trigger('submit')
     expect((wrapper.find('textarea').element as HTMLTextAreaElement).value).toBe('')
-    expect((wrapper.find('input[type="date"]').element as HTMLInputElement).value).toBe('')
+    expect((wrapper.find('input[type="date"]').element as HTMLInputElement).value).toBe(
+      new Date().toLocaleDateString('en-CA'),
+    )
   })
 
   it('disables submit button when loading prop is true even if all fields are filled', async () => {

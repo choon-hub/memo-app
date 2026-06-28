@@ -68,7 +68,9 @@ describe('WorkoutForm', () => {
     expect((wrapper.find('#wo-menu').element as HTMLInputElement).value).toBe('')
     expect((wrapper.find('#wo-intensity').element as HTMLInputElement).value).toBe('')
     expect((wrapper.find('#wo-reps').element as HTMLInputElement).value).toBe('')
-    expect((wrapper.find('input[type="date"]').element as HTMLInputElement).value).toBe('')
+    expect((wrapper.find('input[type="date"]').element as HTMLInputElement).value).toBe(
+      new Date().toLocaleDateString('en-CA'),
+    )
   })
 
   it('disables submit button when loading prop is true even if all fields are filled', async () => {

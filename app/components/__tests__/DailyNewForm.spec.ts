@@ -18,6 +18,7 @@ describe('DailyNewForm', () => {
     const wrapper = mount(DailyNewForm)
     await wrapper.find('input[type="text"]').setValue('タイトル')
     await wrapper.find('textarea').setValue('内容です')
+    await wrapper.find('input[type="date"]').setValue('')
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
   })
 
@@ -48,7 +49,9 @@ describe('DailyNewForm', () => {
     await wrapper.find('form').trigger('submit')
     expect((wrapper.find('input[type="text"]').element as HTMLInputElement).value).toBe('')
     expect((wrapper.find('textarea').element as HTMLTextAreaElement).value).toBe('')
-    expect((wrapper.find('input[type="date"]').element as HTMLInputElement).value).toBe('')
+    expect((wrapper.find('input[type="date"]').element as HTMLInputElement).value).toBe(
+      new Date().toLocaleDateString('en-CA'),
+    )
   })
 
   it('disables submit button when loading prop is true even if all fields are filled', async () => {

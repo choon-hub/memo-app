@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import type { WorkoutRecord } from '#shared/types/domain'
 
 const props = defineProps<{
@@ -16,6 +16,10 @@ const menu = ref('')
 const intensity = ref('')
 const reps = ref('')
 const date = ref('')
+
+onMounted(() => {
+  date.value = new Date().toLocaleDateString('en-CA')
+})
 
 watch(
   () => props.prefill,
@@ -55,7 +59,7 @@ function handleSubmit() {
   menu.value = ''
   intensity.value = ''
   reps.value = ''
-  date.value = ''
+  date.value = new Date().toLocaleDateString('en-CA')
 }
 </script>
 
