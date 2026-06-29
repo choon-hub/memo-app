@@ -1,5 +1,7 @@
 import { ref, computed } from 'vue'
 import type { WorkoutRecord, WorkoutCategory } from '#shared/types/domain'
+import { sortByDate } from '~/utils/sort'
+import { withLoading } from '~/utils/withLoading'
 
 export const _workoutStore: WorkoutRecord[] = [
   {
@@ -35,10 +37,7 @@ export const useWorkout = () => {
       const filtered = category
         ? _workoutStore.filter((r) => r.category === category)
         : [..._workoutStore]
-      items.value = filtered.sort((a, b) => {
-        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        return sortOrder.value === 'desc' ? -diff : diff
-      })
+      items.value = sortByDate(filtered, sortOrder.value)
     } finally {
       loading.value = false
     }
@@ -56,9 +55,7 @@ export const useWorkout = () => {
     reps: number
     date?: string
   }) {
-    loading.value = true
-    error.value = null
-    try {
+    await withLoading(loading, error, async () => {
       const newItem: WorkoutRecord = {
         id: crypto.randomUUID(),
         category: payload.category,
@@ -69,14 +66,9 @@ export const useWorkout = () => {
       }
       _workoutStore.push(newItem)
       if (!lastCategory.value || newItem.category === lastCategory.value) {
-        items.value = [...items.value, newItem].sort((a, b) => {
-          const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          return sortOrder.value === 'desc' ? -diff : diff
-        })
+        items.value = sortByDate([...items.value, newItem], sortOrder.value)
       }
-    } finally {
-      loading.value = false
-    }
+    })
   }
 
   const menuSuggestions = computed(() =>
