@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import WorkoutForm from '../WorkoutForm.vue'
 
 describe('WorkoutForm', () => {
-  it('has submit button disabled when all fields are empty', () => {
+  it('has submit button disabled when menu, intensity and reps are empty', () => {
     const wrapper = mount(WorkoutForm)
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
   })
@@ -11,6 +11,15 @@ describe('WorkoutForm', () => {
   it('has submit button disabled when only menu is filled', async () => {
     const wrapper = mount(WorkoutForm)
     await wrapper.find('#wo-menu').setValue('ベンチプレス')
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('has submit button disabled when all workout fields are valid but date is explicitly cleared', async () => {
+    const wrapper = mount(WorkoutForm)
+    await wrapper.find('#wo-menu').setValue('ベンチプレス')
+    await wrapper.find('#wo-intensity').setValue('60')
+    await wrapper.find('#wo-reps').setValue('10')
+    await wrapper.find('input[type="date"]').setValue('')
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
   })
 

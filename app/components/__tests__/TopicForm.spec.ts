@@ -3,12 +3,12 @@ import { mount } from '@vue/test-utils'
 import TopicForm from '../TopicForm.vue'
 
 describe('TopicForm', () => {
-  it('has submit button disabled when all fields are empty', () => {
+  it('has submit button disabled when content is empty', () => {
     const wrapper = mount(TopicForm)
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
   })
 
-  it('has submit button disabled when only content is filled', async () => {
+  it('has submit button disabled when content is filled but date is explicitly cleared', async () => {
     const wrapper = mount(TopicForm)
     await wrapper.find('input[type="date"]').setValue('')
     await wrapper.find('textarea').setValue('今日あったこと')

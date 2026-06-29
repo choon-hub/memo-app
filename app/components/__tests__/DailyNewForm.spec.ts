@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import DailyNewForm from '../DailyNewForm.vue'
 
 describe('DailyNewForm', () => {
-  it('has submit button disabled when all fields are empty', () => {
+  it('has submit button disabled when title and content are empty', () => {
     const wrapper = mount(DailyNewForm)
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
   })
@@ -14,7 +14,7 @@ describe('DailyNewForm', () => {
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
   })
 
-  it('has submit button disabled when title and content are filled but date is missing', async () => {
+  it('has submit button disabled when title and content are filled but date is explicitly cleared', async () => {
     const wrapper = mount(DailyNewForm)
     await wrapper.find('input[type="text"]').setValue('タイトル')
     await wrapper.find('textarea').setValue('内容です')
