@@ -1,5 +1,7 @@
 import { ref } from 'vue'
 import type { DailyNew } from '#shared/types/domain'
+import { sortByDate } from '~/utils/sort'
+import { withLoading } from '~/utils/withLoading'
 
 export const _dailyNewStore: DailyNew[] = [
   {
@@ -20,10 +22,7 @@ export const useDailyNew = () => {
     if (items.value.length === 0) loading.value = true
     error.value = null
     try {
-      items.value = [..._dailyNewStore].sort((a, b) => {
-        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        return sortOrder.value === 'desc' ? -diff : diff
-      })
+      items.value = sortByDate([..._dailyNewStore], sortOrder.value)
     } finally {
       loading.value = false
     }
@@ -35,9 +34,7 @@ export const useDailyNew = () => {
   }
 
   async function create(payload: { title: string; content: string; date?: string }) {
-    loading.value = true
-    error.value = null
-    try {
+    await withLoading(loading, error, async () => {
       const newItem: DailyNew = {
         id: crypto.randomUUID(),
         title: payload.title,
@@ -45,47 +42,28 @@ export const useDailyNew = () => {
         created_at: payload.date ?? new Date().toISOString(),
       }
       _dailyNewStore.push(newItem)
-      items.value = [...items.value, newItem].sort((a, b) => {
-        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        return sortOrder.value === 'desc' ? -diff : diff
-      })
-    } finally {
-      loading.value = false
-    }
+      items.value = sortByDate([...items.value, newItem], sortOrder.value)
+    })
   }
 
   async function update(id: string, payload: { title: string; content: string }) {
-    loading.value = true
-    error.value = null
-    try {
+    await withLoading(loading, error, async () => {
       const idx = _dailyNewStore.findIndex((d) => d.id === id)
       if (idx !== -1) {
         _dailyNewStore[idx] = { ..._dailyNewStore[idx], ...payload }
       }
-      items.value = [..._dailyNewStore].sort((a, b) => {
-        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        return sortOrder.value === 'desc' ? -diff : diff
-      })
-    } finally {
-      loading.value = false
-    }
+      items.value = sortByDate([..._dailyNewStore], sortOrder.value)
+    })
   }
 
   async function remove(id: string) {
-    loading.value = true
-    error.value = null
-    try {
+    await withLoading(loading, error, async () => {
       const idx = _dailyNewStore.findIndex((d) => d.id === id)
       if (idx !== -1) {
         _dailyNewStore.splice(idx, 1)
       }
-      items.value = [..._dailyNewStore].sort((a, b) => {
-        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        return sortOrder.value === 'desc' ? -diff : diff
-      })
-    } finally {
-      loading.value = false
-    }
+      items.value = sortByDate([..._dailyNewStore], sortOrder.value)
+    })
   }
 
   return { items, loading, error, sortOrder, fetchList, toggleSortOrder, create, update, remove }
