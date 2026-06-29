@@ -90,4 +90,27 @@ describe('WorkoutForm', () => {
     await wrapper.find('input[type="date"]').setValue('2024-01-15')
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
   })
+
+  it('renders candidate chips when menuCandidates prop is provided', () => {
+    const wrapper = mount(WorkoutForm, {
+      props: { menuCandidates: ['ベンチプレス', 'ダンベルフライ'] },
+    })
+    const chips = wrapper.findAll('button[type="button"]')
+    expect(chips).toHaveLength(2)
+    expect(chips[0].text()).toBe('ベンチプレス')
+    expect(chips[1].text()).toBe('ダンベルフライ')
+  })
+
+  it('does not render candidates area when menuCandidates is empty', () => {
+    const wrapper = mount(WorkoutForm, { props: { menuCandidates: [] } })
+    expect(wrapper.find('.candidates').exists()).toBe(false)
+  })
+
+  it('fills menu field when a candidate chip is clicked', async () => {
+    const wrapper = mount(WorkoutForm, {
+      props: { menuCandidates: ['ベンチプレス', 'ダンベルフライ'] },
+    })
+    await wrapper.findAll('button[type="button"]')[0].trigger('click')
+    expect((wrapper.find('#wo-menu').element as HTMLInputElement).value).toBe('ベンチプレス')
+  })
 })

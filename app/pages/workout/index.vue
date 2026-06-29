@@ -7,9 +7,19 @@ import WorkoutForm from '~/components/WorkoutForm.vue'
 import WorkoutList from '~/components/WorkoutList.vue'
 import type { WorkoutCategory, WorkoutRecord } from '#shared/types/domain'
 
-const { items, loading, error, sortOrder, menuSuggestions, fetchList, create, toggleSortOrder } =
-  useWorkout()
+const {
+  items,
+  loading,
+  error,
+  sortOrder,
+  menuSuggestions,
+  getMenuCandidates,
+  fetchList,
+  create,
+  toggleSortOrder,
+} = useWorkout()
 const selectedCategory = ref<WorkoutCategory>('chest')
+const menuCandidates = getMenuCandidates(selectedCategory)
 const prefill = ref<WorkoutRecord | undefined>(undefined)
 
 await useAsyncData(
@@ -54,6 +64,7 @@ function handleCopy(record: WorkoutRecord) {
       :loading="loading"
       :prefill="prefill"
       :menu-suggestions="menuSuggestions"
+      :menu-candidates="menuCandidates"
       @submit="handleSubmit"
     />
     <WorkoutList
