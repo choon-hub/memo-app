@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { ref } from 'vue'
 import { useWorkout, _workoutStore } from '../useWorkout'
 
 describe('useWorkout', () => {
@@ -228,6 +229,128 @@ describe('useWorkout', () => {
 
       expect(menuSuggestions.value).toContain('ベンチプレス')
       expect(menuSuggestions.value).toContain('ラットプルダウン')
+    })
+  })
+
+  describe('getMenuCandidates()', () => {
+    it('returns empty array when store is empty', () => {
+      const { getMenuCandidates } = useWorkout()
+      const candidates = getMenuCandidates(ref('chest'))
+      expect(candidates.value).toEqual([])
+    })
+
+    it('returns deduplicated menu names for the given category', () => {
+      _workoutStore.push(
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 80,
+          reps: 8,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+        {
+          id: '3',
+          category: 'chest',
+          menu: 'ダンベルフライ',
+          intensity: 20,
+          reps: 12,
+          created_at: '2024-01-03T00:00:00Z',
+        },
+      )
+      const { getMenuCandidates } = useWorkout()
+      const candidates = getMenuCandidates(ref('chest'))
+      expect(candidates.value).toEqual(['ベンチプレス', 'ダンベルフライ'])
+    })
+
+    it('ignores records from other categories', () => {
+      _workoutStore.push(
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          category: 'back',
+          menu: 'ラットプルダウン',
+          intensity: 50,
+          reps: 12,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      )
+      const { getMenuCandidates } = useWorkout()
+      const candidates = getMenuCandidates(ref('chest'))
+      expect(candidates.value).toEqual(['ベンチプレス'])
+      expect(candidates.value).not.toContain('ラットプルダウン')
+    })
+
+    it('caps results at 5 entries', () => {
+      for (let i = 1; i <= 7; i++) {
+        _workoutStore.push({
+          id: String(i),
+          category: 'legs',
+          menu: `メニュー${i}`,
+          intensity: 50,
+          reps: 10,
+          created_at: `2024-01-0${i}T00:00:00Z`,
+        })
+      }
+      const { getMenuCandidates } = useWorkout()
+      const candidates = getMenuCandidates(ref('legs'))
+      expect(candidates.value).toHaveLength(5)
+    })
+
+    it('returns empty array when no records match the category', () => {
+      _workoutStore.push({
+        id: '1',
+        category: 'chest',
+        menu: 'ベンチプレス',
+        intensity: 60,
+        reps: 10,
+        created_at: '2024-01-01T00:00:00Z',
+      })
+      const { getMenuCandidates } = useWorkout()
+      const candidates = getMenuCandidates(ref('legs'))
+      expect(candidates.value).toEqual([])
+    })
+
+    it('reacts to category ref change', () => {
+      _workoutStore.push(
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          category: 'back',
+          menu: 'ラットプルダウン',
+          intensity: 50,
+          reps: 12,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      )
+      const category = ref<import('#shared/types/domain').WorkoutCategory>('chest')
+      const { getMenuCandidates } = useWorkout()
+      const candidates = getMenuCandidates(category)
+      expect(candidates.value).toEqual(['ベンチプレス'])
+      category.value = 'back'
+      expect(candidates.value).toEqual(['ラットプルダウン'])
     })
   })
 

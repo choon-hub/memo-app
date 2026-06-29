@@ -6,6 +6,7 @@ const props = defineProps<{
   loading?: boolean
   prefill?: WorkoutRecord
   menuSuggestions?: string[]
+  menuCandidates?: string[]
 }>()
 
 const emit = defineEmits<{
@@ -48,6 +49,10 @@ const isDisabled = computed(() => {
   )
 })
 
+function applyCandidate(name: string) {
+  menu.value = name
+}
+
 function handleSubmit() {
   if (isDisabled.value) return
   emit('submit', {
@@ -65,6 +70,17 @@ function handleSubmit() {
 
 <template>
   <form class="form" @submit.prevent="handleSubmit">
+    <div v-if="props.menuCandidates?.length" class="candidates">
+      <button
+        v-for="c in props.menuCandidates"
+        :key="c"
+        type="button"
+        class="candidate-chip"
+        @click="applyCandidate(c)"
+      >
+        {{ c }}
+      </button>
+    </div>
     <div class="fields">
       <div class="field field-menu">
         <label for="wo-menu" class="label">メニュー</label>
@@ -228,5 +244,23 @@ function handleSubmit() {
 .submit-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.candidates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.candidate-chip {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4754f0;
+  background: rgba(71, 84, 240, 0.1);
+  border: none;
+  border-radius: 10px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
 }
 </style>

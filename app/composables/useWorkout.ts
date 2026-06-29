@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, type Ref } from 'vue'
 import type { WorkoutRecord, WorkoutCategory } from '#shared/types/domain'
 import { sortByDate } from '~/utils/sort'
 import { withLoading } from '~/utils/withLoading'
@@ -77,6 +77,18 @@ export const useWorkout = () => {
     ),
   )
 
+  function getMenuCandidates(category: Ref<WorkoutCategory>) {
+    return computed(() =>
+      [
+        ...new Set(
+          [...items.value, ..._workoutStore]
+            .filter((r) => r.category === category.value)
+            .map((r) => r.menu),
+        ),
+      ].slice(0, 5),
+    )
+  }
+
   return {
     items,
     loading,
@@ -84,6 +96,7 @@ export const useWorkout = () => {
     sortOrder,
     lastCategory,
     menuSuggestions,
+    getMenuCandidates,
     fetchList,
     toggleSortOrder,
     create,
