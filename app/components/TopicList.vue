@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { Topic } from '#shared/types/domain'
+import { formatDate } from '~/utils/date'
 
 const props = defineProps<{
   items: Topic[]
@@ -15,14 +16,6 @@ const emit = defineEmits<{
 
 const editingId = ref<string | null>(null)
 const editContent = ref('')
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-  })
-}
 
 function startEdit(item: Topic) {
   editingId.value = item.id

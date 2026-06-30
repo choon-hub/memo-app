@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { WorkoutCategory, WorkoutRecord } from '#shared/types/domain'
+import { formatDate } from '~/utils/date'
 
 defineProps<{
   items: WorkoutRecord[]
@@ -15,15 +16,6 @@ const categoryLabels: Record<WorkoutCategory, string> = {
   chest: '胸',
   back: '背中',
   legs: '脚',
-}
-
-function formatDate(dateStr: string): string {
-  const [year, month, day] = dateStr.split('T')[0].split('-').map(Number)
-  return new Date(year, month - 1, day).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-  })
 }
 </script>
 
