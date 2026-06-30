@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { DailyNew } from '#shared/types/domain'
+import { formatDate } from '~/utils/date'
 
 const props = defineProps<{
   items: DailyNew[]
@@ -36,14 +37,6 @@ function saveEdit() {
   editingId.value = null
   editTitle.value = ''
   editContent.value = ''
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-  })
 }
 </script>
 
