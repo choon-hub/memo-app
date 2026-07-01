@@ -83,10 +83,10 @@ function saveEdit() {
             :disabled="props.loading"
           />
           <div class="card-actions">
-            <button type="button" class="btn-save" :disabled="props.loading" @click="saveEdit">
+            <button type="button" class="save-btn" :disabled="props.loading" @click="saveEdit">
               保存
             </button>
-            <button type="button" class="btn-cancel" :disabled="props.loading" @click="cancelEdit">
+            <button type="button" class="cancel-btn" :disabled="props.loading" @click="cancelEdit">
               キャンセル
             </button>
           </div>
@@ -99,7 +99,7 @@ function saveEdit() {
             <div class="card-actions">
               <button
                 type="button"
-                class="btn-edit"
+                class="edit-btn"
                 :disabled="props.loading"
                 @click="startEdit(item)"
               >
@@ -107,7 +107,7 @@ function saveEdit() {
               </button>
               <button
                 type="button"
-                class="btn-delete"
+                class="delete-btn"
                 :disabled="props.loading"
                 @click="emit('remove', item.id)"
               >
@@ -232,8 +232,7 @@ function saveEdit() {
   gap: 6px;
 }
 
-.btn-edit,
-.btn-save {
+.edit-btn {
   font-size: 12px;
   font-weight: 600;
   color: #4754f0;
@@ -246,19 +245,39 @@ function saveEdit() {
   transition: background 0.15s;
 }
 
-.btn-edit:hover,
-.btn-save:hover {
+.edit-btn:hover {
   background: rgba(71, 84, 240, 0.15);
 }
 
-.btn-edit:disabled,
-.btn-save:disabled {
+.edit-btn:disabled {
   opacity: 0.5;
-  cursor: default;
+  cursor: not-allowed;
 }
 
-.btn-delete,
-.btn-cancel {
+.save-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: #4754f0;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.save-btn:hover:not(:disabled) {
+  background: #3a45d4;
+}
+
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.delete-btn,
+.cancel-btn {
   font-size: 12px;
   font-weight: 600;
   color: #4a4a68;
@@ -271,15 +290,15 @@ function saveEdit() {
   transition: background 0.15s;
 }
 
-.btn-delete:hover,
-.btn-cancel:hover {
+.delete-btn:hover:not(:disabled),
+.cancel-btn:hover:not(:disabled) {
   background: rgba(74, 74, 104, 0.15);
 }
 
-.btn-delete:disabled,
-.btn-cancel:disabled {
+.delete-btn:disabled,
+.cancel-btn:disabled {
   opacity: 0.5;
-  cursor: default;
+  cursor: not-allowed;
 }
 
 .edit-input {
