@@ -22,6 +22,7 @@ export type Database = {
           content?: string
           created_at?: string
         }
+        Relationships: []
       }
       topics: {
         Row: {
@@ -39,6 +40,7 @@ export type Database = {
           content?: string
           created_at?: string
         }
+        Relationships: []
       }
       workout_records: {
         Row: {
@@ -65,7 +67,12 @@ export type Database = {
           reps?: number
           created_at?: string
         }
+        Relationships: []
       }
     }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
   }
 }

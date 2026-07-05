@@ -2,27 +2,12 @@ import { ref, computed, type Ref } from 'vue'
 import type { WorkoutRecord, WorkoutCategory } from '#shared/types/domain'
 import { sortByDate } from '~/utils/sort'
 import { withLoading } from '~/utils/withLoading'
-
-export const _workoutStore: WorkoutRecord[] = [
-  {
-    id: 'seed-1',
-    category: 'chest',
-    menu: 'ベンチプレス',
-    intensity: 60,
-    reps: 10,
-    created_at: '2026-06-24T09:00:00Z',
-  },
-  {
-    id: 'seed-2',
-    category: 'back',
-    menu: 'ラットプルダウン',
-    intensity: 50,
-    reps: 12,
-    created_at: '2026-06-23T09:00:00Z',
-  },
-]
+import { useSupabase } from '~/composables/useSupabase'
 
 const items = ref<WorkoutRecord[]>([])
+// メニュー候補はカテゴリ絞り込み中でも全カテゴリのメニューを対象とするため、
+// 絞り込み前の全件を items とは別に保持する
+const allRecords = ref<WorkoutRecord[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const lastCategory = ref<WorkoutCategory | undefined>(undefined)
@@ -34,9 +19,15 @@ export const useWorkout = () => {
     if (items.value.length === 0) loading.value = true
     error.value = null
     try {
+      const { data, error: fetchError } = await useSupabase().from('workout_records').select('*')
+      if (fetchError) {
+        error.value = fetchError.message
+        return
+      }
+      allRecords.value = data ?? []
       const filtered = category
-        ? _workoutStore.filter((r) => r.category === category)
-        : [..._workoutStore]
+        ? allRecords.value.filter((r) => r.category === category)
+        : allRecords.value
       items.value = sortByDate(filtered, sortOrder.value)
     } finally {
       loading.value = false
@@ -56,34 +47,32 @@ export const useWorkout = () => {
     date?: string
   }) {
     await withLoading(loading, error, async () => {
-      const newItem: WorkoutRecord = {
-        id: crypto.randomUUID(),
-        category: payload.category,
-        menu: payload.menu,
-        intensity: payload.intensity,
-        reps: payload.reps,
-        created_at: payload.date ?? new Date().toISOString(),
+      const { error: insertError } = await useSupabase()
+        .from('workout_records')
+        .insert({
+          category: payload.category,
+          menu: payload.menu,
+          intensity: payload.intensity,
+          reps: payload.reps,
+          ...(payload.date ? { created_at: payload.date } : {}),
+        })
+      if (insertError) {
+        error.value = insertError.message
+        return
       }
-      _workoutStore.push(newItem)
-      if (!lastCategory.value || newItem.category === lastCategory.value) {
-        items.value = sortByDate([...items.value, newItem], sortOrder.value)
-      }
+      await fetchList(lastCategory.value)
     })
   }
 
   const menuSuggestions = computed(() =>
-    [...new Set([...items.value, ..._workoutStore].map((r) => r.menu))].sort((a, b) =>
-      a.localeCompare(b),
-    ),
+    [...new Set(allRecords.value.map((r) => r.menu))].sort((a, b) => a.localeCompare(b)),
   )
 
   function getMenuCandidates(category: Ref<WorkoutCategory>) {
     return computed(() =>
       [
         ...new Set(
-          [...items.value, ..._workoutStore]
-            .filter((r) => r.category === category.value)
-            .map((r) => r.menu),
+          allRecords.value.filter((r) => r.category === category.value).map((r) => r.menu),
         ),
       ].slice(0, 5),
     )
