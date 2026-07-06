@@ -1,11 +1,11 @@
 # Claude Code 用：GitHub Issue 一括作成プロンプト
 
-以下をそのまま Claude Code に貼り付けて使う。`memo-app-issues.md` を同じリポジトリに置いておくこと。
+以下をそのまま Claude Code に貼り付けて使う。`docs/issues/memo-app-issues.md` を同じリポジトリに置いておくこと。
 
 ---
 
 あなたはこのリポジトリの開発を支援するエンジニアです。
-添付の `memo-app-issues.md` に記載された Issue 一覧（#1〜#14）を、`gh` コマンドを使って GitHub Issue として作成してください。
+添付の `docs/issues/memo-app-issues.md` に記載された Issue 一覧（#1〜#14）を、`gh` コマンドを使って GitHub Issue として作成してください。
 
 ## 前提確認（作業前に実行）
 
@@ -24,7 +24,7 @@
 
 ## Issue 作成手順
 
-`memo-app-issues.md` の各 Issue 本文（`## [#N] タイトル` から次の `## [#...]` の手前まで）を、その Issue の body としてそのまま使う。
+`docs/issues/memo-app-issues.md` の各 Issue 本文（`## [#N] タイトル` から次の `## [#...]` の手前まで）を、その Issue の body としてそのまま使う。
 
 1. **番号順（#1→#14）に**作成する。依存関係の参照を後から番号で貼れるようにするため。
 2. 各 Issue の body は一時ファイルに書き出してから `--body-file` で渡す（本文に改行・チェックボックス・テーブルが含まれるため、`--body` でのインライン渡しは避ける）。

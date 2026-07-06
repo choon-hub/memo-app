@@ -74,7 +74,7 @@ npx vitest run app/composables/__tests__/useDailyNew.spec.ts   # 単一ファイ
 - Conventional Commits 形式（例：`feat: ...` / `fix: ...` / `refactor(composables): ...`）
 - ブランチ名は `<type>/<issue番号>-<説明>`（例：`refactor/30-supabase-persistence`）
 - main へは PR 経由でマージする
-- Issue の詳細仕様は `memo-app-issues.md` を参照
+- Issue の詳細仕様は `docs/issues/memo-app-issues.md` を参照
 
 ## セキュリティ
 
