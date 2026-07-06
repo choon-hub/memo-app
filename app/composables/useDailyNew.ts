@@ -2,15 +2,7 @@ import { ref } from 'vue'
 import type { DailyNew } from '#shared/types/domain'
 import { sortByDate } from '~/utils/sort'
 import { withLoading } from '~/utils/withLoading'
-
-export const _dailyNewStore: DailyNew[] = [
-  {
-    id: 'seed-1',
-    title: '初めての発見',
-    content: '今日は新しいことを学んだ',
-    created_at: '2026-06-24T09:00:00Z',
-  },
-]
+import { useSupabase } from '~/composables/useSupabase'
 
 const items = ref<DailyNew[]>([])
 const loading = ref(false)
@@ -22,7 +14,12 @@ export const useDailyNew = () => {
     if (items.value.length === 0) loading.value = true
     error.value = null
     try {
-      items.value = sortByDate([..._dailyNewStore], sortOrder.value)
+      const { data, error: fetchError } = await useSupabase().from('daily_new').select('*')
+      if (fetchError) {
+        error.value = fetchError.message
+        return
+      }
+      items.value = sortByDate(data ?? [], sortOrder.value)
     } finally {
       loading.value = false
     }
@@ -35,34 +32,43 @@ export const useDailyNew = () => {
 
   async function create(payload: { title: string; content: string; date?: string }) {
     await withLoading(loading, error, async () => {
-      const newItem: DailyNew = {
-        id: crypto.randomUUID(),
-        title: payload.title,
-        content: payload.content,
-        created_at: payload.date ?? new Date().toISOString(),
+      const { error: insertError } = await useSupabase()
+        .from('daily_new')
+        .insert({
+          title: payload.title,
+          content: payload.content,
+          ...(payload.date ? { created_at: payload.date } : {}),
+        })
+      if (insertError) {
+        error.value = insertError.message
+        return
       }
-      _dailyNewStore.push(newItem)
-      items.value = sortByDate([...items.value, newItem], sortOrder.value)
+      await fetchList()
     })
   }
 
   async function update(id: string, payload: { title: string; content: string }) {
     await withLoading(loading, error, async () => {
-      const idx = _dailyNewStore.findIndex((d) => d.id === id)
-      if (idx !== -1) {
-        _dailyNewStore[idx] = { ..._dailyNewStore[idx], ...payload }
+      const { error: updateError } = await useSupabase()
+        .from('daily_new')
+        .update(payload)
+        .eq('id', id)
+      if (updateError) {
+        error.value = updateError.message
+        return
       }
-      items.value = sortByDate([..._dailyNewStore], sortOrder.value)
+      await fetchList()
     })
   }
 
   async function remove(id: string) {
     await withLoading(loading, error, async () => {
-      const idx = _dailyNewStore.findIndex((d) => d.id === id)
-      if (idx !== -1) {
-        _dailyNewStore.splice(idx, 1)
+      const { error: deleteError } = await useSupabase().from('daily_new').delete().eq('id', id)
+      if (deleteError) {
+        error.value = deleteError.message
+        return
       }
-      items.value = sortByDate([..._dailyNewStore], sortOrder.value)
+      await fetchList()
     })
   }
 

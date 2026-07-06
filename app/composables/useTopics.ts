@@ -2,14 +2,7 @@ import { ref } from 'vue'
 import type { Topic } from '#shared/types/domain'
 import { sortByDate } from '~/utils/sort'
 import { withLoading } from '~/utils/withLoading'
-
-export const _topicsStore: Topic[] = [
-  {
-    id: 'seed-1',
-    content: '今日は天気が良かった',
-    created_at: '2026-06-24T09:00:00Z',
-  },
-]
+import { useSupabase } from '~/composables/useSupabase'
 
 const items = ref<Topic[]>([])
 const loading = ref(false)
@@ -21,7 +14,12 @@ export const useTopics = () => {
     if (items.value.length === 0) loading.value = true
     error.value = null
     try {
-      items.value = sortByDate([..._topicsStore], sortOrder.value)
+      const { data, error: fetchError } = await useSupabase().from('topics').select('*')
+      if (fetchError) {
+        error.value = fetchError.message
+        return
+      }
+      items.value = sortByDate(data ?? [], sortOrder.value)
     } finally {
       loading.value = false
     }
@@ -34,23 +32,28 @@ export const useTopics = () => {
 
   async function create(payload: { content: string; date?: string }) {
     await withLoading(loading, error, async () => {
-      const newItem: Topic = {
-        id: crypto.randomUUID(),
-        content: payload.content,
-        created_at: payload.date ?? new Date().toISOString(),
+      const { error: insertError } = await useSupabase()
+        .from('topics')
+        .insert({
+          content: payload.content,
+          ...(payload.date ? { created_at: payload.date } : {}),
+        })
+      if (insertError) {
+        error.value = insertError.message
+        return
       }
-      _topicsStore.push(newItem)
-      items.value = sortByDate([...items.value, newItem], sortOrder.value)
+      await fetchList()
     })
   }
 
   async function update(id: string, payload: { content: string }) {
     await withLoading(loading, error, async () => {
-      const idx = _topicsStore.findIndex((t) => t.id === id)
-      if (idx !== -1) {
-        _topicsStore[idx] = { ..._topicsStore[idx], content: payload.content }
+      const { error: updateError } = await useSupabase().from('topics').update(payload).eq('id', id)
+      if (updateError) {
+        error.value = updateError.message
+        return
       }
-      items.value = sortByDate([..._topicsStore], sortOrder.value)
+      await fetchList()
     })
   }
 

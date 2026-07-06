@@ -1,21 +1,36 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
-import { useWorkout, _workoutStore } from '../useWorkout'
+import { mockQueryChain, mockSupabaseClient, resetMocks } from '../../../test/mocks/supabase'
+import { useWorkout } from '../useWorkout'
+import type { WorkoutRecord } from '#shared/types/domain'
+
+vi.mock('~/composables/useSupabase', () => ({
+  useSupabase: () => mockSupabaseClient,
+}))
+
+function mockTable(rows: WorkoutRecord[]) {
+  mockQueryChain.then.mockImplementation((resolve: (v: unknown) => unknown) =>
+    Promise.resolve(resolve({ data: rows, error: null })),
+  )
+}
 
 describe('useWorkout', () => {
-  beforeEach(() => {
-    _workoutStore.length = 0
-    const { items, loading, error, sortOrder, lastCategory } = useWorkout()
+  beforeEach(async () => {
+    resetMocks()
+    const { items, loading, error, sortOrder, lastCategory, fetchList } = useWorkout()
+    // 空テーブルを fetch してモジュールスコープの allRecords をクリアする
+    await fetchList()
     items.value = []
     loading.value = false
     error.value = null
     sortOrder.value = 'desc'
     lastCategory.value = undefined
+    resetMocks()
   })
 
   describe('fetchList()', () => {
     it('returns all records sorted by created_at descending when no category given', async () => {
-      _workoutStore.push(
+      mockTable([
         {
           id: '1',
           category: 'chest',
@@ -32,11 +47,13 @@ describe('useWorkout', () => {
           reps: 8,
           created_at: '2024-01-02T00:00:00Z',
         },
-      )
+      ])
 
       const { items, loading, error, fetchList } = useWorkout()
       await fetchList()
 
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('workout_records')
+      expect(mockQueryChain.select).toHaveBeenCalledWith('*')
       expect(items.value[0].id).toBe('2')
       expect(items.value[1].id).toBe('1')
       expect(loading.value).toBe(false)
@@ -44,7 +61,7 @@ describe('useWorkout', () => {
     })
 
     it('filters by category when category is provided', async () => {
-      _workoutStore.push(
+      mockTable([
         {
           id: '1',
           category: 'chest',
@@ -61,7 +78,7 @@ describe('useWorkout', () => {
           reps: 8,
           created_at: '2024-01-02T00:00:00Z',
         },
-      )
+      ])
 
       const { items, loading, error, fetchList } = useWorkout()
       await fetchList('chest')
@@ -72,7 +89,7 @@ describe('useWorkout', () => {
       expect(error.value).toBeNull()
     })
 
-    it('returns empty array when store is empty', async () => {
+    it('returns empty array when the table is empty', async () => {
       const { items, loading, error, fetchList } = useWorkout()
       await fetchList()
 
@@ -82,14 +99,16 @@ describe('useWorkout', () => {
     })
 
     it('returns empty array when no records match the category', async () => {
-      _workoutStore.push({
-        id: '1',
-        category: 'chest',
-        menu: 'bench press',
-        intensity: 60,
-        reps: 10,
-        created_at: '2024-01-01T00:00:00Z',
-      })
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'bench press',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
 
       const { items, loading, error, fetchList } = useWorkout()
       await fetchList('legs')
@@ -97,6 +116,19 @@ describe('useWorkout', () => {
       expect(items.value).toEqual([])
       expect(loading.value).toBe(false)
       expect(error.value).toBeNull()
+    })
+
+    it('sets error when fetch fails', async () => {
+      mockQueryChain.then.mockImplementation((resolve: (v: unknown) => unknown) =>
+        Promise.resolve(resolve({ data: null, error: { message: 'fetch failed' } })),
+      )
+
+      const { items, loading, error, fetchList } = useWorkout()
+      await fetchList()
+
+      expect(error.value).toBe('fetch failed')
+      expect(items.value).toEqual([])
+      expect(loading.value).toBe(false)
     })
   })
 
@@ -107,7 +139,7 @@ describe('useWorkout', () => {
     })
 
     it('switches to asc and re-sorts the list', async () => {
-      _workoutStore.push(
+      mockTable([
         {
           id: '1',
           category: 'chest',
@@ -124,7 +156,7 @@ describe('useWorkout', () => {
           reps: 12,
           created_at: '2024-01-02T00:00:00Z',
         },
-      )
+      ])
 
       const { items, sortOrder, fetchList, toggleSortOrder } = useWorkout()
       await fetchList()
@@ -136,7 +168,7 @@ describe('useWorkout', () => {
     })
 
     it('preserves the active category filter when toggling sort', async () => {
-      _workoutStore.push(
+      mockTable([
         {
           id: '1',
           category: 'chest',
@@ -153,7 +185,7 @@ describe('useWorkout', () => {
           reps: 8,
           created_at: '2024-01-02T00:00:00Z',
         },
-      )
+      ])
 
       const { items, fetchList, toggleSortOrder } = useWorkout()
       await fetchList('chest')
@@ -165,13 +197,13 @@ describe('useWorkout', () => {
   })
 
   describe('menuSuggestions', () => {
-    it('returns empty array when items is empty', () => {
+    it('returns empty array before anything is fetched', () => {
       const { menuSuggestions } = useWorkout()
       expect(menuSuggestions.value).toEqual([])
     })
 
-    it('returns unique sorted menu names from items', async () => {
-      _workoutStore.push(
+    it('returns unique sorted menu names from fetched records', async () => {
+      mockTable([
         {
           id: '1',
           category: 'chest',
@@ -196,7 +228,7 @@ describe('useWorkout', () => {
           reps: 8,
           created_at: '2024-01-03T00:00:00Z',
         },
-      )
+      ])
 
       const { menuSuggestions, fetchList } = useWorkout()
       await fetchList()
@@ -205,7 +237,7 @@ describe('useWorkout', () => {
     })
 
     it('includes menus from all categories, not just the active filter', async () => {
-      _workoutStore.push(
+      mockTable([
         {
           id: '1',
           category: 'chest',
@@ -222,7 +254,7 @@ describe('useWorkout', () => {
           reps: 12,
           created_at: '2024-01-02T00:00:00Z',
         },
-      )
+      ])
 
       const { menuSuggestions, fetchList } = useWorkout()
       await fetchList('chest')
@@ -233,14 +265,14 @@ describe('useWorkout', () => {
   })
 
   describe('getMenuCandidates()', () => {
-    it('returns empty array when store is empty', () => {
+    it('returns empty array before anything is fetched', () => {
       const { getMenuCandidates } = useWorkout()
       const candidates = getMenuCandidates(ref('chest'))
       expect(candidates.value).toEqual([])
     })
 
-    it('returns deduplicated menu names for the given category', () => {
-      _workoutStore.push(
+    it('returns deduplicated menu names for the given category', async () => {
+      mockTable([
         {
           id: '1',
           category: 'chest',
@@ -265,14 +297,17 @@ describe('useWorkout', () => {
           reps: 12,
           created_at: '2024-01-03T00:00:00Z',
         },
-      )
-      const { getMenuCandidates } = useWorkout()
+      ])
+
+      const { getMenuCandidates, fetchList } = useWorkout()
+      await fetchList()
+
       const candidates = getMenuCandidates(ref('chest'))
       expect(candidates.value).toEqual(['ベンチプレス', 'ダンベルフライ'])
     })
 
-    it('ignores records from other categories', () => {
-      _workoutStore.push(
+    it('ignores records from other categories', async () => {
+      mockTable([
         {
           id: '1',
           category: 'chest',
@@ -289,16 +324,20 @@ describe('useWorkout', () => {
           reps: 12,
           created_at: '2024-01-02T00:00:00Z',
         },
-      )
-      const { getMenuCandidates } = useWorkout()
+      ])
+
+      const { getMenuCandidates, fetchList } = useWorkout()
+      await fetchList()
+
       const candidates = getMenuCandidates(ref('chest'))
       expect(candidates.value).toEqual(['ベンチプレス'])
       expect(candidates.value).not.toContain('ラットプルダウン')
     })
 
-    it('caps results at 5 entries', () => {
+    it('caps results at 5 entries', async () => {
+      const rows: WorkoutRecord[] = []
       for (let i = 1; i <= 7; i++) {
-        _workoutStore.push({
+        rows.push({
           id: String(i),
           category: 'legs',
           menu: `メニュー${i}`,
@@ -307,27 +346,36 @@ describe('useWorkout', () => {
           created_at: `2024-01-0${i}T00:00:00Z`,
         })
       }
-      const { getMenuCandidates } = useWorkout()
+      mockTable(rows)
+
+      const { getMenuCandidates, fetchList } = useWorkout()
+      await fetchList()
+
       const candidates = getMenuCandidates(ref('legs'))
       expect(candidates.value).toHaveLength(5)
     })
 
-    it('returns empty array when no records match the category', () => {
-      _workoutStore.push({
-        id: '1',
-        category: 'chest',
-        menu: 'ベンチプレス',
-        intensity: 60,
-        reps: 10,
-        created_at: '2024-01-01T00:00:00Z',
-      })
-      const { getMenuCandidates } = useWorkout()
+    it('returns empty array when no records match the category', async () => {
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+
+      const { getMenuCandidates, fetchList } = useWorkout()
+      await fetchList()
+
       const candidates = getMenuCandidates(ref('legs'))
       expect(candidates.value).toEqual([])
     })
 
-    it('reacts to category ref change', () => {
-      _workoutStore.push(
+    it('reacts to category ref change', async () => {
+      mockTable([
         {
           id: '1',
           category: 'chest',
@@ -344,9 +392,12 @@ describe('useWorkout', () => {
           reps: 12,
           created_at: '2024-01-02T00:00:00Z',
         },
-      )
+      ])
+
+      const { getMenuCandidates, fetchList } = useWorkout()
+      await fetchList()
+
       const category = ref<import('#shared/types/domain').WorkoutCategory>('chest')
-      const { getMenuCandidates } = useWorkout()
       const candidates = getMenuCandidates(category)
       expect(candidates.value).toEqual(['ベンチプレス'])
       category.value = 'back'
@@ -355,10 +406,27 @@ describe('useWorkout', () => {
   })
 
   describe('create()', () => {
-    it('adds a new record and refreshes the list', async () => {
+    it('inserts a new record and refreshes the list', async () => {
+      mockTable([
+        {
+          id: 'new-1',
+          category: 'chest',
+          menu: 'bench press',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+
       const { items, error, loading, create } = useWorkout()
       await create({ category: 'chest', menu: 'bench press', intensity: 60, reps: 10 })
 
+      expect(mockQueryChain.insert).toHaveBeenCalledWith({
+        category: 'chest',
+        menu: 'bench press',
+        intensity: 60,
+        reps: 10,
+      })
       expect(error.value).toBeNull()
       expect(loading.value).toBe(false)
       expect(items.value).toHaveLength(1)
@@ -371,24 +439,56 @@ describe('useWorkout', () => {
     })
 
     it('refreshes with the active category filter after insert', async () => {
-      _workoutStore.push({
-        id: 'back-1',
-        category: 'back',
-        menu: 'pull up',
-        intensity: 0,
-        reps: 8,
-        created_at: '2024-01-01T00:00:00Z',
-      })
+      mockTable([
+        {
+          id: 'back-1',
+          category: 'back',
+          menu: 'pull up',
+          intensity: 0,
+          reps: 8,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
 
       const { items, fetchList, create } = useWorkout()
       await fetchList('chest')
 
+      mockTable([
+        {
+          id: 'back-1',
+          category: 'back',
+          menu: 'pull up',
+          intensity: 0,
+          reps: 8,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 'chest-1',
+          category: 'chest',
+          menu: 'bench press',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      ])
       await create({ category: 'chest', menu: 'bench press', intensity: 60, reps: 10 })
 
+      expect(items.value).toHaveLength(1)
       expect(items.value.every((r) => r.category === 'chest')).toBe(true)
     })
 
-    it('uses provided date as created_at', async () => {
+    it('passes provided date as created_at', async () => {
+      mockTable([
+        {
+          id: 'new-1',
+          category: 'back',
+          menu: 'pull up',
+          intensity: 0,
+          reps: 8,
+          created_at: '2024-01-15T00:00:00Z',
+        },
+      ])
+
       const { items, create } = useWorkout()
       await create({
         category: 'back',
@@ -398,7 +498,26 @@ describe('useWorkout', () => {
         date: '2024-01-15T00:00:00Z',
       })
 
+      expect(mockQueryChain.insert).toHaveBeenCalledWith({
+        category: 'back',
+        menu: 'pull up',
+        intensity: 0,
+        reps: 8,
+        created_at: '2024-01-15T00:00:00Z',
+      })
       expect(items.value[0].created_at).toBe('2024-01-15T00:00:00Z')
+    })
+
+    it('sets error when insert fails', async () => {
+      mockQueryChain.then.mockImplementation((resolve: (v: unknown) => unknown) =>
+        Promise.resolve(resolve({ data: null, error: { message: 'insert failed' } })),
+      )
+
+      const { items, error, create } = useWorkout()
+      await create({ category: 'chest', menu: 'bench press', intensity: 60, reps: 10 })
+
+      expect(error.value).toBe('insert failed')
+      expect(items.value).toEqual([])
     })
   })
 })
