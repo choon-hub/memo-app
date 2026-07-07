@@ -69,6 +69,13 @@ npx vitest run app/composables/__tests__/useDailyNew.spec.ts   # 単一ファイ
 スキーマ変更時は新しいマイグレーションファイルを追加し、`shared/types/database.ts` を
 `supabase gen types` で再生成する。
 
+## スキル
+
+グローバルスキル（`~/.claude/skills`）で以下のワークフローを提供している。
+
+- Issue の一括起票は `/requirements-to-issues`、機能提案は `/propose-feature`（いずれも手動起動専用・モデルからは不可視）
+- Issue の実装〜PR 作成は `github-issue-workflow` が既定の入口（「issue #N を実装して」等で発火。`/github-issue-workflow` でも手動起動可）
+
 ## コミット / PR
 
 - Conventional Commits 形式（例：`feat: ...` / `fix: ...` / `refactor(composables): ...`）

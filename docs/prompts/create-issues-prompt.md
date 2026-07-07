@@ -1,5 +1,8 @@
 # Claude Code 用：GitHub Issue 一括作成プロンプト
 
+> **アーカイブ済み（2026-07-07）**: 初期 Issue #1〜#14 の起票に使用済み。
+> 今後の一括起票は `/requirements-to-issues` スキルを使うこと。
+
 以下をそのまま Claude Code に貼り付けて使う。`docs/issues/memo-app-issues.md` を同じリポジトリに置いておくこと。
 
 ---
