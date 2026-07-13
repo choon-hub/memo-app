@@ -69,6 +69,29 @@ describe('one-new page', () => {
     expect(wrapper.text()).toContain('テスト')
   })
 
+  it('renders SkeletonList instead of DailyNewList while loading with no items', async () => {
+    mockLoading.value = true
+    const wrapper = await mountPage()
+    expect(wrapper.findComponent({ name: 'SkeletonList' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'DailyNewList' }).exists()).toBe(false)
+  })
+
+  it('keeps DailyNewList mounted while loading with existing items', async () => {
+    mockLoading.value = true
+    mockItems.value = [
+      { id: '1', title: 'テスト', content: '内容', created_at: '2024-01-01T00:00:00Z' },
+    ]
+    const wrapper = await mountPage()
+    expect(wrapper.findComponent({ name: 'SkeletonList' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'DailyNewList' }).exists()).toBe(true)
+  })
+
+  it('hides SkeletonList when loading is false', async () => {
+    const wrapper = await mountPage()
+    expect(wrapper.findComponent({ name: 'SkeletonList' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'DailyNewList' }).exists()).toBe(true)
+  })
+
   it('calls create with ISO timestamp when form submits', async () => {
     const wrapper = await mountPage()
     const form = wrapper.findComponent({ name: 'DailyNewForm' })

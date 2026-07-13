@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
-import { defineComponent, h, Suspense, ref } from 'vue'
-import TopicsPage from '../index.vue'
+import { defineComponent, h, Suspense, ref, computed } from 'vue'
+import WorkoutPage from '../index.vue'
+import type { WorkoutRecord } from '#shared/types/domain'
 
 vi.mock('#app/composables/asyncData', async () => {
   const { ref } = await import('vue')
@@ -20,36 +21,41 @@ vi.mock('#app/composables/asyncData', async () => {
 
 const mockFetchList = vi.fn()
 const mockCreate = vi.fn()
-const mockUpdate = vi.fn()
-const mockItems = ref<{ id: string; content: string; created_at: string }[]>([])
+const mockToggleSortOrder = vi.fn()
+const mockItems = ref<WorkoutRecord[]>([])
 const mockLoading = ref(false)
 const mockError = ref<string | null>(null)
+const mockSortOrder = ref<'asc' | 'desc'>('desc')
 
-vi.mock('~/composables/useTopics', () => ({
-  useTopics: vi.fn(() => ({
+vi.mock('~/composables/useWorkout', () => ({
+  useWorkout: vi.fn(() => ({
     items: mockItems,
     loading: mockLoading,
     error: mockError,
+    sortOrder: mockSortOrder,
+    menuSuggestions: computed(() => []),
+    getMenuCandidates: vi.fn(() => computed(() => [])),
     fetchList: mockFetchList,
     create: mockCreate,
-    update: mockUpdate,
+    toggleSortOrder: mockToggleSortOrder,
   })),
 }))
 
 async function mountPage() {
   const wrapper = mount(
-    defineComponent({ render: () => h(Suspense, null, { default: () => h(TopicsPage) }) }),
+    defineComponent({ render: () => h(Suspense, null, { default: () => h(WorkoutPage) }) }),
   )
   await flushPromises()
   return wrapper
 }
 
-describe('topics page', () => {
+describe('workout page', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockItems.value = []
     mockLoading.value = false
     mockError.value = null
+    mockSortOrder.value = 'desc'
   })
 
   it('calls fetchList on mount', async () => {
@@ -63,40 +69,33 @@ describe('topics page', () => {
     expect(wrapper.text()).toContain('データの取得に失敗しました')
   })
 
-  it('renders TopicList with items from composable', async () => {
-    mockItems.value = [{ id: '1', content: 'トピック', created_at: '2024-01-01T00:00:00Z' }]
-    const wrapper = await mountPage()
-    expect(wrapper.text()).toContain('トピック')
-  })
-
-  it('renders SkeletonList instead of TopicList while loading with no items', async () => {
+  it('renders SkeletonList instead of WorkoutList while loading with no items', async () => {
     mockLoading.value = true
     const wrapper = await mountPage()
     expect(wrapper.findComponent({ name: 'SkeletonList' }).exists()).toBe(true)
-    expect(wrapper.findComponent({ name: 'TopicList' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'WorkoutList' }).exists()).toBe(false)
   })
 
-  it('keeps TopicList mounted while loading with existing items', async () => {
+  it('keeps WorkoutList mounted while loading with existing items', async () => {
     mockLoading.value = true
-    mockItems.value = [{ id: '1', content: 'トピック', created_at: '2024-01-01T00:00:00Z' }]
+    mockItems.value = [
+      {
+        id: '1',
+        category: 'chest',
+        menu: 'ベンチプレス',
+        intensity: 60,
+        reps: 10,
+        created_at: '2024-01-01T00:00:00Z',
+      },
+    ]
     const wrapper = await mountPage()
     expect(wrapper.findComponent({ name: 'SkeletonList' }).exists()).toBe(false)
-    expect(wrapper.findComponent({ name: 'TopicList' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'WorkoutList' }).exists()).toBe(true)
   })
 
   it('hides SkeletonList when loading is false', async () => {
     const wrapper = await mountPage()
     expect(wrapper.findComponent({ name: 'SkeletonList' }).exists()).toBe(false)
-    expect(wrapper.findComponent({ name: 'TopicList' }).exists()).toBe(true)
-  })
-
-  it('calls create with ISO timestamp when form submits', async () => {
-    const wrapper = await mountPage()
-    const form = wrapper.findComponent({ name: 'TopicForm' })
-    await form.vm.$emit('submit', { content: '今日あったこと', date: '2024-01-15' })
-    expect(mockCreate).toHaveBeenCalledWith({
-      content: '今日あったこと',
-      date: '2024-01-15T00:00:00.000Z',
-    })
+    expect(wrapper.findComponent({ name: 'WorkoutList' }).exists()).toBe(true)
   })
 })

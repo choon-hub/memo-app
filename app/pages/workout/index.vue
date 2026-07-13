@@ -5,6 +5,7 @@ import { useWorkout } from '~/composables/useWorkout'
 import WorkoutCategoryTabs from '~/components/WorkoutCategoryTabs.vue'
 import WorkoutForm from '~/components/WorkoutForm.vue'
 import WorkoutList from '~/components/WorkoutList.vue'
+import SkeletonList from '~/components/SkeletonList.vue'
 import type { WorkoutCategory, WorkoutRecord } from '#shared/types/domain'
 
 const {
@@ -67,7 +68,9 @@ function handleCopy(record: WorkoutRecord) {
       :menu-candidates="menuCandidates"
       @submit="handleSubmit"
     />
+    <SkeletonList v-if="loading && items.length === 0" />
     <WorkoutList
+      v-else
       :items="items"
       :sort-order="sortOrder"
       @toggle-sort="toggleSortOrder"
