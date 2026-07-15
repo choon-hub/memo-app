@@ -85,4 +85,5 @@ npm run build    # プロダクションビルド
 ## セキュリティ
 
 - `.env` はコミットしない。`SUPABASE_KEY` は anon key（単一ユーザー前提で public 扱い）
-- RLS は未設定のため、キーの扱いに注意
+- 全テーブルで RLS 有効（`0002_enable_rls_existing_tables.sql`）。ただし anon ロールに全操作を
+  許可する permissive ポリシーのため、実効的なアクセス制限はない。キーの扱いには引き続き注意
