@@ -6,8 +6,15 @@ export default defineNuxtConfig({
   css: ['~/assets/global.css'],
   app: {
     head: {
-      meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
+      meta: [
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { property: 'og:image', content: '/images/memo-icon.png' },
+        { name: 'twitter:card', content: 'summary' },
+        { name: 'twitter:image', content: '/images/memo-icon.png' },
+      ],
       link: [
+        { rel: 'icon', type: 'image/png', href: '/images/memo-icon.png' },
+        { rel: 'apple-touch-icon', href: '/images/memo-icon.png' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         {
