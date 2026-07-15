@@ -11,8 +11,10 @@ export default defineNuxtConfig({
         { property: 'og:image', content: '/images/memo-icon.png' },
         { name: 'twitter:card', content: 'summary' },
         { name: 'twitter:image', content: '/images/memo-icon.png' },
+        { name: 'theme-color', content: '#f9f9f9' },
       ],
       link: [
+        { rel: 'manifest', href: '/manifest.webmanifest' },
         { rel: 'icon', type: 'image/png', href: '/images/memo-icon.png' },
         { rel: 'apple-touch-icon', href: '/images/memo-icon.png' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
