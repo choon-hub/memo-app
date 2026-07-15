@@ -38,6 +38,16 @@ describe('TopicForm', () => {
     expect(emitted![0][0]).toEqual({ content: '今日あったこと', date: '2024-01-15' })
   })
 
+  it('emits submit event preserving internal line breaks in content', async () => {
+    const wrapper = mount(TopicForm)
+    await wrapper.find('textarea').setValue('  1行目\n2行目  ')
+    await wrapper.find('input[type="date"]').setValue('2024-01-15')
+    await wrapper.find('form').trigger('submit')
+    const emitted = wrapper.emitted('submit')
+    expect(emitted).toHaveLength(1)
+    expect(emitted![0][0]).toEqual({ content: '1行目\n2行目', date: '2024-01-15' })
+  })
+
   it('clears fields after submit', async () => {
     const wrapper = mount(TopicForm)
     await wrapper.find('textarea').setValue('今日あったこと')
