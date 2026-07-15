@@ -31,4 +31,48 @@ describe('DailyNewList', () => {
     expect(wrapper.text()).toContain('Second')
     expect(wrapper.text()).toContain('Content 2')
   })
+
+  it('switches to edit mode with prefilled values when edit button is clicked', async () => {
+    const wrapper = mount(DailyNewList, { props: { items: mockItems } })
+    await wrapper.findAll('.edit-btn')[0].trigger('click')
+
+    const input = wrapper.find('.edit-input')
+    const textarea = wrapper.find('.edit-textarea')
+    expect(input.exists()).toBe(true)
+    expect(textarea.exists()).toBe(true)
+    expect((input.element as HTMLInputElement).value).toBe('First')
+    expect((textarea.element as HTMLTextAreaElement).value).toBe('Content 1')
+  })
+
+  it('returns to view mode without emitting update when cancel button is clicked', async () => {
+    const wrapper = mount(DailyNewList, { props: { items: mockItems } })
+    await wrapper.findAll('.edit-btn')[0].trigger('click')
+    await wrapper.find('.cancel-btn').trigger('click')
+
+    expect(wrapper.find('.edit-input').exists()).toBe(false)
+    expect(wrapper.emitted('update')).toBeUndefined()
+  })
+
+  it('emits update with id and trimmed values when save button is clicked', async () => {
+    const wrapper = mount(DailyNewList, { props: { items: mockItems } })
+    await wrapper.findAll('.edit-btn')[0].trigger('click')
+    await wrapper.find('.edit-input').setValue('  新しいタイトル  ')
+    await wrapper.find('.edit-textarea').setValue('  新しい内容  ')
+    await wrapper.find('.save-btn').trigger('click')
+
+    const emitted = wrapper.emitted('update')
+    expect(emitted).toBeTruthy()
+    expect(emitted).toHaveLength(1)
+    expect(emitted![0]).toEqual(['1', '新しいタイトル', '新しい内容'])
+    expect(wrapper.find('.edit-input').exists()).toBe(false)
+  })
+
+  it('emits remove with the item id when delete button is clicked', async () => {
+    const wrapper = mount(DailyNewList, { props: { items: mockItems } })
+    await wrapper.findAll('.delete-btn')[1].trigger('click')
+
+    const emitted = wrapper.emitted('remove')
+    expect(emitted).toBeTruthy()
+    expect(emitted![0]).toEqual(['2'])
+  })
 })
