@@ -34,7 +34,7 @@ describe('useWorkout', () => {
         {
           id: '1',
           category: 'chest',
-          menu: 'bench press',
+          menu: 'ベンチプレス',
           intensity: 60,
           reps: 10,
           created_at: '2024-01-01T00:00:00Z',
@@ -42,7 +42,7 @@ describe('useWorkout', () => {
         {
           id: '2',
           category: 'back',
-          menu: 'pull up',
+          menu: '懸垂',
           intensity: 0,
           reps: 8,
           created_at: '2024-01-02T00:00:00Z',
@@ -65,7 +65,7 @@ describe('useWorkout', () => {
         {
           id: '1',
           category: 'chest',
-          menu: 'bench press',
+          menu: 'ベンチプレス',
           intensity: 60,
           reps: 10,
           created_at: '2024-01-01T00:00:00Z',
@@ -73,7 +73,7 @@ describe('useWorkout', () => {
         {
           id: '2',
           category: 'back',
-          menu: 'pull up',
+          menu: '懸垂',
           intensity: 0,
           reps: 8,
           created_at: '2024-01-02T00:00:00Z',
@@ -103,7 +103,7 @@ describe('useWorkout', () => {
         {
           id: '1',
           category: 'chest',
-          menu: 'bench press',
+          menu: 'ベンチプレス',
           intensity: 60,
           reps: 10,
           created_at: '2024-01-01T00:00:00Z',
@@ -143,7 +143,7 @@ describe('useWorkout', () => {
         {
           id: '1',
           category: 'chest',
-          menu: 'bench press',
+          menu: 'ベンチプレス',
           intensity: 60,
           reps: 10,
           created_at: '2024-01-01T00:00:00Z',
@@ -151,7 +151,7 @@ describe('useWorkout', () => {
         {
           id: '2',
           category: 'chest',
-          menu: 'dumbbell fly',
+          menu: 'ダンベルフライ',
           intensity: 20,
           reps: 12,
           created_at: '2024-01-02T00:00:00Z',
@@ -172,7 +172,7 @@ describe('useWorkout', () => {
         {
           id: '1',
           category: 'chest',
-          menu: 'bench press',
+          menu: 'ベンチプレス',
           intensity: 60,
           reps: 10,
           created_at: '2024-01-01T00:00:00Z',
@@ -180,7 +180,7 @@ describe('useWorkout', () => {
         {
           id: '2',
           category: 'back',
-          menu: 'pull up',
+          menu: '懸垂',
           intensity: 0,
           reps: 8,
           created_at: '2024-01-02T00:00:00Z',
@@ -411,7 +411,7 @@ describe('useWorkout', () => {
         {
           id: 'new-1',
           category: 'chest',
-          menu: 'bench press',
+          menu: 'ベンチプレス',
           intensity: 60,
           reps: 10,
           created_at: '2024-01-01T00:00:00Z',
@@ -419,11 +419,11 @@ describe('useWorkout', () => {
       ])
 
       const { items, error, loading, create } = useWorkout()
-      await create({ category: 'chest', menu: 'bench press', intensity: 60, reps: 10 })
+      await create({ category: 'chest', menu: 'ベンチプレス', intensity: 60, reps: 10 })
 
       expect(mockQueryChain.insert).toHaveBeenCalledWith({
         category: 'chest',
-        menu: 'bench press',
+        menu: 'ベンチプレス',
         intensity: 60,
         reps: 10,
       })
@@ -432,7 +432,7 @@ describe('useWorkout', () => {
       expect(items.value).toHaveLength(1)
       expect(items.value[0]).toMatchObject({
         category: 'chest',
-        menu: 'bench press',
+        menu: 'ベンチプレス',
         intensity: 60,
         reps: 10,
       })
@@ -443,7 +443,7 @@ describe('useWorkout', () => {
         {
           id: 'back-1',
           category: 'back',
-          menu: 'pull up',
+          menu: '懸垂',
           intensity: 0,
           reps: 8,
           created_at: '2024-01-01T00:00:00Z',
@@ -457,7 +457,7 @@ describe('useWorkout', () => {
         {
           id: 'back-1',
           category: 'back',
-          menu: 'pull up',
+          menu: '懸垂',
           intensity: 0,
           reps: 8,
           created_at: '2024-01-01T00:00:00Z',
@@ -465,13 +465,13 @@ describe('useWorkout', () => {
         {
           id: 'chest-1',
           category: 'chest',
-          menu: 'bench press',
+          menu: 'ベンチプレス',
           intensity: 60,
           reps: 10,
           created_at: '2024-01-02T00:00:00Z',
         },
       ])
-      await create({ category: 'chest', menu: 'bench press', intensity: 60, reps: 10 })
+      await create({ category: 'chest', menu: 'ベンチプレス', intensity: 60, reps: 10 })
 
       expect(items.value).toHaveLength(1)
       expect(items.value.every((r) => r.category === 'chest')).toBe(true)
@@ -482,7 +482,7 @@ describe('useWorkout', () => {
         {
           id: 'new-1',
           category: 'back',
-          menu: 'pull up',
+          menu: '懸垂',
           intensity: 0,
           reps: 8,
           created_at: '2024-01-15T00:00:00Z',
@@ -492,7 +492,7 @@ describe('useWorkout', () => {
       const { items, create } = useWorkout()
       await create({
         category: 'back',
-        menu: 'pull up',
+        menu: '懸垂',
         intensity: 0,
         reps: 8,
         date: '2024-01-15T00:00:00Z',
@@ -500,7 +500,7 @@ describe('useWorkout', () => {
 
       expect(mockQueryChain.insert).toHaveBeenCalledWith({
         category: 'back',
-        menu: 'pull up',
+        menu: '懸垂',
         intensity: 0,
         reps: 8,
         created_at: '2024-01-15T00:00:00Z',
@@ -514,7 +514,7 @@ describe('useWorkout', () => {
       )
 
       const { items, error, create } = useWorkout()
-      await create({ category: 'chest', menu: 'bench press', intensity: 60, reps: 10 })
+      await create({ category: 'chest', menu: 'ベンチプレス', intensity: 60, reps: 10 })
 
       expect(error.value).toBe('insert failed')
       expect(items.value).toEqual([])
