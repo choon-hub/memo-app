@@ -6,8 +6,8 @@ import { useSupabase } from '~/composables/useSupabase'
 
 const items = ref<WorkoutRecord[]>([])
 // メニュー候補はカテゴリ絞り込み中でも全カテゴリのメニューを対象とするため、
-// 絞り込み前の全件を items とは別に保持する
-const allRecords = ref<WorkoutRecord[]>([])
+// 候補算出に必要な列だけを items とは別に保持する（取得は初回と create 成功時のみ）
+const menuRecords = ref<Pick<WorkoutRecord, 'menu' | 'category'>[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const lastCategory = ref<WorkoutCategory | undefined>(undefined)
@@ -19,19 +19,28 @@ export const useWorkout = () => {
     if (items.value.length === 0) loading.value = true
     error.value = null
     try {
-      const { data, error: fetchError } = await useSupabase().from('workout_records').select('*')
+      let query = useSupabase().from('workout_records').select('*')
+      if (category) query = query.eq('category', category)
+      const { data, error: fetchError } = await query
       if (fetchError) {
         error.value = fetchError.message
         return
       }
-      allRecords.value = data ?? []
-      const filtered = category
-        ? allRecords.value.filter((r) => r.category === category)
-        : allRecords.value
-      items.value = sortByDate(filtered, sortOrder.value)
+      items.value = sortByDate(data ?? [], sortOrder.value)
     } finally {
       loading.value = false
     }
+  }
+
+  async function fetchMenuRecords() {
+    const { data, error: fetchError } = await useSupabase()
+      .from('workout_records')
+      .select('menu, category')
+    if (fetchError) {
+      error.value = fetchError.message
+      return
+    }
+    menuRecords.value = data ?? []
   }
 
   async function toggleSortOrder() {
@@ -61,18 +70,19 @@ export const useWorkout = () => {
         return
       }
       await fetchList(lastCategory.value)
+      await fetchMenuRecords()
     })
   }
 
   const menuSuggestions = computed(() =>
-    [...new Set(allRecords.value.map((r) => r.menu))].sort((a, b) => a.localeCompare(b)),
+    [...new Set(menuRecords.value.map((r) => r.menu))].sort((a, b) => a.localeCompare(b)),
   )
 
   function getMenuCandidates(category: Ref<WorkoutCategory>) {
     return computed(() =>
       [
         ...new Set(
-          allRecords.value.filter((r) => r.category === category.value).map((r) => r.menu),
+          menuRecords.value.filter((r) => r.category === category.value).map((r) => r.menu),
         ),
       ].slice(0, 5),
     )
@@ -87,6 +97,7 @@ export const useWorkout = () => {
     menuSuggestions,
     getMenuCandidates,
     fetchList,
+    fetchMenuRecords,
     toggleSortOrder,
     create,
   }

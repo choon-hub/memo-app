@@ -20,6 +20,7 @@ vi.mock('#app/composables/asyncData', async () => {
 })
 
 const mockFetchList = vi.fn()
+const mockFetchMenuRecords = vi.fn()
 const mockCreate = vi.fn()
 const mockToggleSortOrder = vi.fn()
 const mockItems = ref<WorkoutRecord[]>([])
@@ -36,6 +37,7 @@ vi.mock('~/composables/useWorkout', () => ({
     menuSuggestions: computed(() => []),
     getMenuCandidates: vi.fn(() => computed(() => [])),
     fetchList: mockFetchList,
+    fetchMenuRecords: mockFetchMenuRecords,
     create: mockCreate,
     toggleSortOrder: mockToggleSortOrder,
   })),
@@ -61,6 +63,11 @@ describe('workout page', () => {
   it('calls fetchList on mount', async () => {
     await mountPage()
     expect(mockFetchList).toHaveBeenCalledOnce()
+  })
+
+  it('calls fetchMenuRecords on mount for menu candidates', async () => {
+    await mountPage()
+    expect(mockFetchMenuRecords).toHaveBeenCalledOnce()
   })
 
   it('shows error message when error is set', async () => {
