@@ -29,4 +29,12 @@ describe('TopicList', () => {
     expect(wrapper.text()).toContain('トピック1')
     expect(wrapper.text()).toContain('トピック2')
   })
+
+  it('renders multiline content with line breaks preserved', () => {
+    const multilineItems: Topic[] = [
+      { id: '1', content: '1行目\n2行目', created_at: '2024-01-02T00:00:00Z' },
+    ]
+    const wrapper = mount(TopicList, { props: { items: multilineItems } })
+    expect(wrapper.find('.card-content').text()).toBe('1行目\n2行目')
+  })
 })

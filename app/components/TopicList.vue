@@ -172,6 +172,7 @@ function saveEdit() {
   color: #4a4a68;
   margin: 0 0 6px;
   line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 .card-footer {
