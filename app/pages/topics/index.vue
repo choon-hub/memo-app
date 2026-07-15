@@ -3,6 +3,7 @@ import { useAsyncData } from '#app'
 import { useTopics } from '~/composables/useTopics'
 import TopicForm from '~/components/TopicForm.vue'
 import TopicList from '~/components/TopicList.vue'
+import SkeletonList from '~/components/SkeletonList.vue'
 
 const { items, loading, error, sortOrder, fetchList, create, update, toggleSortOrder } = useTopics()
 
@@ -22,7 +23,9 @@ async function handleUpdate(id: string, content: string) {
     <h1 class="sr-only">日々のトピック</h1>
     <div v-if="error" class="error">{{ error }}</div>
     <TopicForm :loading="loading" @submit="handleSubmit" />
+    <SkeletonList v-if="loading && items.length === 0" />
     <TopicList
+      v-else
       :items="items"
       :sort-order="sortOrder"
       :loading="loading"

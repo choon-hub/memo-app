@@ -3,6 +3,7 @@ import { useAsyncData } from '#app'
 import { useDailyNew } from '~/composables/useDailyNew'
 import DailyNewForm from '~/components/DailyNewForm.vue'
 import DailyNewList from '~/components/DailyNewList.vue'
+import SkeletonList from '~/components/SkeletonList.vue'
 
 const { items, loading, error, sortOrder, fetchList, create, update, remove, toggleSortOrder } =
   useDailyNew()
@@ -27,7 +28,9 @@ async function handleRemove(id: string) {
     <h1 class="sr-only">1日1新</h1>
     <div v-if="error" class="error">{{ error }}</div>
     <DailyNewForm :loading="loading" @submit="handleSubmit" />
+    <SkeletonList v-if="loading && items.length === 0" />
     <DailyNewList
+      v-else
       :items="items"
       :sort-order="sortOrder"
       :loading="loading"
