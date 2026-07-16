@@ -18,11 +18,13 @@ const emit = defineEmits<{
 const editingId = ref<string | null>(null)
 const editTitle = ref('')
 const editContent = ref('')
+const confirmingId = ref<string | null>(null)
 
 function startEdit(item: DailyNew) {
   editingId.value = item.id
   editTitle.value = item.title
   editContent.value = item.content
+  confirmingId.value = null
 }
 
 function cancelEdit() {
@@ -37,6 +39,20 @@ function saveEdit() {
   editingId.value = null
   editTitle.value = ''
   editContent.value = ''
+}
+
+function startDelete(item: DailyNew) {
+  confirmingId.value = item.id
+}
+
+function cancelDelete() {
+  confirmingId.value = null
+}
+
+function confirmDelete() {
+  if (!confirmingId.value) return
+  emit('remove', confirmingId.value)
+  confirmingId.value = null
 }
 </script>
 
@@ -97,22 +113,43 @@ function saveEdit() {
           <div class="card-footer">
             <span class="card-date">{{ formatDate(item.created_at) }}</span>
             <div class="card-actions">
-              <button
-                type="button"
-                class="edit-btn"
-                :disabled="props.loading"
-                @click="startEdit(item)"
-              >
-                編集
-              </button>
-              <button
-                type="button"
-                class="delete-btn"
-                :disabled="props.loading"
-                @click="emit('remove', item.id)"
-              >
-                削除
-              </button>
+              <template v-if="confirmingId === item.id">
+                <span class="confirm-label">削除しますか？</span>
+                <button
+                  type="button"
+                  class="confirm-delete-btn"
+                  :disabled="props.loading"
+                  @click="confirmDelete"
+                >
+                  削除する
+                </button>
+                <button
+                  type="button"
+                  class="cancel-btn"
+                  :disabled="props.loading"
+                  @click="cancelDelete"
+                >
+                  キャンセル
+                </button>
+              </template>
+              <template v-else>
+                <button
+                  type="button"
+                  class="edit-btn"
+                  :disabled="props.loading"
+                  @click="startEdit(item)"
+                >
+                  編集
+                </button>
+                <button
+                  type="button"
+                  class="delete-btn"
+                  :disabled="props.loading"
+                  @click="startDelete(item)"
+                >
+                  削除
+                </button>
+              </template>
             </div>
           </div>
         </template>
@@ -272,6 +309,35 @@ function saveEdit() {
 }
 
 .save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirm-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a4a68;
+  align-self: center;
+}
+
+.confirm-delete-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: #e05252;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.confirm-delete-btn:hover:not(:disabled) {
+  background: #c94444;
+}
+
+.confirm-delete-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
