@@ -16,6 +16,7 @@ const {
   menuSuggestions,
   getMenuCandidates,
   fetchList,
+  fetchMenuRecords,
   create,
   toggleSortOrder,
 } = useWorkout()
@@ -27,6 +28,8 @@ await useAsyncData(
   () => `workout-${selectedCategory.value}`,
   () => fetchList(selectedCategory.value),
 )
+// メニュー候補は全カテゴリ横断のため、カテゴリ別キャッシュとは別に一度だけ取得する
+await useAsyncData('workout-menus', () => fetchMenuRecords())
 
 function handleCategoryChange(category: WorkoutCategory) {
   selectedCategory.value = category

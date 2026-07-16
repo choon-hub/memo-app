@@ -17,9 +17,9 @@ function mockTable(rows: WorkoutRecord[]) {
 describe('useWorkout', () => {
   beforeEach(async () => {
     resetMocks()
-    const { items, loading, error, sortOrder, lastCategory, fetchList } = useWorkout()
-    // 空テーブルを fetch してモジュールスコープの allRecords をクリアする
-    await fetchList()
+    const { items, loading, error, sortOrder, lastCategory, fetchMenuRecords } = useWorkout()
+    // 空テーブルを fetch してモジュールスコープの menuRecords をクリアする
+    await fetchMenuRecords()
     items.value = []
     loading.value = false
     error.value = null
@@ -54,13 +54,14 @@ describe('useWorkout', () => {
 
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('workout_records')
       expect(mockQueryChain.select).toHaveBeenCalledWith('*')
+      expect(mockQueryChain.eq).not.toHaveBeenCalled()
       expect(items.value[0].id).toBe('2')
       expect(items.value[1].id).toBe('1')
       expect(loading.value).toBe(false)
       expect(error.value).toBeNull()
     })
 
-    it('filters by category when category is provided', async () => {
+    it('filters by category on the DB query when category is provided', async () => {
       mockTable([
         {
           id: '1',
@@ -70,19 +71,13 @@ describe('useWorkout', () => {
           reps: 10,
           created_at: '2024-01-01T00:00:00Z',
         },
-        {
-          id: '2',
-          category: 'back',
-          menu: '懸垂',
-          intensity: 0,
-          reps: 8,
-          created_at: '2024-01-02T00:00:00Z',
-        },
       ])
 
       const { items, loading, error, fetchList } = useWorkout()
       await fetchList('chest')
 
+      expect(mockQueryChain.select).toHaveBeenCalledWith('*')
+      expect(mockQueryChain.eq).toHaveBeenCalledWith('category', 'chest')
       expect(items.value).toHaveLength(1)
       expect(items.value[0].category).toBe('chest')
       expect(loading.value).toBe(false)
@@ -99,20 +94,12 @@ describe('useWorkout', () => {
     })
 
     it('returns empty array when no records match the category', async () => {
-      mockTable([
-        {
-          id: '1',
-          category: 'chest',
-          menu: 'ベンチプレス',
-          intensity: 60,
-          reps: 10,
-          created_at: '2024-01-01T00:00:00Z',
-        },
-      ])
+      mockTable([])
 
       const { items, loading, error, fetchList } = useWorkout()
       await fetchList('legs')
 
+      expect(mockQueryChain.eq).toHaveBeenCalledWith('category', 'legs')
       expect(items.value).toEqual([])
       expect(loading.value).toBe(false)
       expect(error.value).toBeNull()
@@ -177,14 +164,6 @@ describe('useWorkout', () => {
           reps: 10,
           created_at: '2024-01-01T00:00:00Z',
         },
-        {
-          id: '2',
-          category: 'back',
-          menu: '懸垂',
-          intensity: 0,
-          reps: 8,
-          created_at: '2024-01-02T00:00:00Z',
-        },
       ])
 
       const { items, fetchList, toggleSortOrder } = useWorkout()
@@ -192,6 +171,7 @@ describe('useWorkout', () => {
       expect(items.value).toHaveLength(1)
 
       await toggleSortOrder()
+      expect(mockQueryChain.eq).toHaveBeenLastCalledWith('category', 'chest')
       expect(items.value.every((r) => r.category === 'chest')).toBe(true)
     })
   })
@@ -230,13 +210,30 @@ describe('useWorkout', () => {
         },
       ])
 
-      const { menuSuggestions, fetchList } = useWorkout()
-      await fetchList()
+      const { menuSuggestions, fetchMenuRecords } = useWorkout()
+      await fetchMenuRecords()
 
+      expect(mockQueryChain.select).toHaveBeenCalledWith('menu, category')
       expect(menuSuggestions.value).toEqual(['スクワット', 'ベンチプレス'])
     })
 
     it('includes menus from all categories, not just the active filter', async () => {
+      // カテゴリ絞り込みは DB 側で行われるため一覧は chest のみを返す
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+
+      const { menuSuggestions, fetchList, fetchMenuRecords } = useWorkout()
+      await fetchList('chest')
+
+      // 候補用クエリは絞り込みなしで全カテゴリの menu を返す
       mockTable([
         {
           id: '1',
@@ -255,9 +252,7 @@ describe('useWorkout', () => {
           created_at: '2024-01-02T00:00:00Z',
         },
       ])
-
-      const { menuSuggestions, fetchList } = useWorkout()
-      await fetchList('chest')
+      await fetchMenuRecords()
 
       expect(menuSuggestions.value).toContain('ベンチプレス')
       expect(menuSuggestions.value).toContain('ラットプルダウン')
@@ -299,8 +294,8 @@ describe('useWorkout', () => {
         },
       ])
 
-      const { getMenuCandidates, fetchList } = useWorkout()
-      await fetchList()
+      const { getMenuCandidates, fetchMenuRecords } = useWorkout()
+      await fetchMenuRecords()
 
       const candidates = getMenuCandidates(ref('chest'))
       expect(candidates.value).toEqual(['ベンチプレス', 'ダンベルフライ'])
@@ -326,8 +321,8 @@ describe('useWorkout', () => {
         },
       ])
 
-      const { getMenuCandidates, fetchList } = useWorkout()
-      await fetchList()
+      const { getMenuCandidates, fetchMenuRecords } = useWorkout()
+      await fetchMenuRecords()
 
       const candidates = getMenuCandidates(ref('chest'))
       expect(candidates.value).toEqual(['ベンチプレス'])
@@ -348,8 +343,8 @@ describe('useWorkout', () => {
       }
       mockTable(rows)
 
-      const { getMenuCandidates, fetchList } = useWorkout()
-      await fetchList()
+      const { getMenuCandidates, fetchMenuRecords } = useWorkout()
+      await fetchMenuRecords()
 
       const candidates = getMenuCandidates(ref('legs'))
       expect(candidates.value).toHaveLength(5)
@@ -367,8 +362,8 @@ describe('useWorkout', () => {
         },
       ])
 
-      const { getMenuCandidates, fetchList } = useWorkout()
-      await fetchList()
+      const { getMenuCandidates, fetchMenuRecords } = useWorkout()
+      await fetchMenuRecords()
 
       const candidates = getMenuCandidates(ref('legs'))
       expect(candidates.value).toEqual([])
@@ -394,8 +389,8 @@ describe('useWorkout', () => {
         },
       ])
 
-      const { getMenuCandidates, fetchList } = useWorkout()
-      await fetchList()
+      const { getMenuCandidates, fetchMenuRecords } = useWorkout()
+      await fetchMenuRecords()
 
       const category = ref<import('#shared/types/domain').WorkoutCategory>('chest')
       const candidates = getMenuCandidates(category)
@@ -427,6 +422,8 @@ describe('useWorkout', () => {
         intensity: 60,
         reps: 10,
       })
+      // create 成功時にメニュー候補の軽量クエリも再取得される
+      expect(mockQueryChain.select).toHaveBeenCalledWith('menu, category')
       expect(error.value).toBeNull()
       expect(loading.value).toBe(false)
       expect(items.value).toHaveLength(1)
@@ -439,29 +436,13 @@ describe('useWorkout', () => {
     })
 
     it('refreshes with the active category filter after insert', async () => {
-      mockTable([
-        {
-          id: 'back-1',
-          category: 'back',
-          menu: '懸垂',
-          intensity: 0,
-          reps: 8,
-          created_at: '2024-01-01T00:00:00Z',
-        },
-      ])
+      mockTable([])
 
       const { items, fetchList, create } = useWorkout()
       await fetchList('chest')
+      expect(items.value).toHaveLength(0)
 
       mockTable([
-        {
-          id: 'back-1',
-          category: 'back',
-          menu: '懸垂',
-          intensity: 0,
-          reps: 8,
-          created_at: '2024-01-01T00:00:00Z',
-        },
         {
           id: 'chest-1',
           category: 'chest',
@@ -473,6 +454,7 @@ describe('useWorkout', () => {
       ])
       await create({ category: 'chest', menu: 'ベンチプレス', intensity: 60, reps: 10 })
 
+      expect(mockQueryChain.eq).toHaveBeenLastCalledWith('category', 'chest')
       expect(items.value).toHaveLength(1)
       expect(items.value.every((r) => r.category === 'chest')).toBe(true)
     })
