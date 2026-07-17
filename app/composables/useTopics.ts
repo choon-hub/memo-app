@@ -32,28 +32,48 @@ export const useTopics = () => {
 
   async function create(payload: { content: string; date?: string }) {
     await withLoading(loading, error, async () => {
-      const { error: insertError } = await useSupabase()
+      const { data, error: insertError } = await useSupabase()
         .from('topics')
         .insert({
           content: payload.content,
           ...(payload.date ? { created_at: payload.date } : {}),
         })
+        .select()
       if (insertError) {
         error.value = insertError.message
         return
       }
-      await fetchList()
+      const created = data?.[0]
+      if (!created) {
+        // 返却行が得られずローカル状態と DB がずれた可能性があるため再フェッチする
+        await fetchList()
+        return
+      }
+      items.value = sortByDate([...items.value, created], sortOrder.value)
     })
   }
 
   async function update(id: string, payload: { content: string }) {
     await withLoading(loading, error, async () => {
-      const { error: updateError } = await useSupabase().from('topics').update(payload).eq('id', id)
+      const { data, error: updateError } = await useSupabase()
+        .from('topics')
+        .update(payload)
+        .eq('id', id)
+        .select()
       if (updateError) {
         error.value = updateError.message
         return
       }
-      await fetchList()
+      const updated = data?.[0]
+      if (!updated) {
+        // 返却行が得られずローカル状態と DB がずれた可能性があるため再フェッチする
+        await fetchList()
+        return
+      }
+      items.value = sortByDate(
+        items.value.map((item) => (item.id === updated.id ? updated : item)),
+        sortOrder.value,
+      )
     })
   }
 
