@@ -32,32 +32,48 @@ export const useDailyNew = () => {
 
   async function create(payload: { title: string; content: string; date?: string }) {
     await withLoading(loading, error, async () => {
-      const { error: insertError } = await useSupabase()
+      const { data, error: insertError } = await useSupabase()
         .from('daily_new')
         .insert({
           title: payload.title,
           content: payload.content,
           ...(payload.date ? { created_at: payload.date } : {}),
         })
+        .select()
       if (insertError) {
         error.value = insertError.message
         return
       }
-      await fetchList()
+      if (!data || data.length === 0) {
+        // 挿入は成功したが行を取得できずローカル状態と DB がずれた可能性があるため再フェッチ
+        await fetchList()
+        return
+      }
+      items.value = sortByDate([...items.value, ...data], sortOrder.value)
     })
   }
 
   async function update(id: string, payload: { title: string; content: string }) {
     await withLoading(loading, error, async () => {
-      const { error: updateError } = await useSupabase()
+      const { data, error: updateError } = await useSupabase()
         .from('daily_new')
         .update(payload)
         .eq('id', id)
+        .select()
       if (updateError) {
         error.value = updateError.message
         return
       }
-      await fetchList()
+      const updated = data?.[0]
+      if (!updated) {
+        // 更新は成功したが行を取得できずローカル状態と DB がずれた可能性があるため再フェッチ
+        await fetchList()
+        return
+      }
+      items.value = sortByDate(
+        items.value.map((item) => (item.id === id ? updated : item)),
+        sortOrder.value,
+      )
     })
   }
 
@@ -68,7 +84,7 @@ export const useDailyNew = () => {
         error.value = deleteError.message
         return
       }
-      await fetchList()
+      items.value = items.value.filter((item) => item.id !== id)
     })
   }
 

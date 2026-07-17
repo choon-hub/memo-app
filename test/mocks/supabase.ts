@@ -1,5 +1,26 @@
 import { vi } from 'vitest'
 
+export type MockQueryResult = {
+  data: unknown
+  error: { message: string } | null
+}
+
+/**
+ * await されるたびに先頭から 1 件ずつ消費される結果キュー。
+ * 空のときは従来どおり `{ data: [], error: null }` を返すため、
+ * `then` を直接 mockImplementation で上書きする既存テストとも共存できる。
+ */
+const queuedResults: MockQueryResult[] = []
+
+export function queueResult(result: MockQueryResult) {
+  queuedResults.push(result)
+}
+
+function resolveNextResult(resolve: (v: unknown) => unknown) {
+  const result = queuedResults.shift() ?? { data: [], error: null }
+  return Promise.resolve(resolve(result))
+}
+
 export const mockQueryChain = {
   select: vi.fn().mockReturnThis(),
   insert: vi.fn().mockReturnThis(),
@@ -9,11 +30,7 @@ export const mockQueryChain = {
   eq: vi.fn().mockReturnThis(),
   single: vi.fn().mockReturnThis(),
   maybeSingle: vi.fn().mockReturnThis(),
-  then: vi
-    .fn()
-    .mockImplementation((resolve: (v: unknown) => unknown) =>
-      Promise.resolve(resolve({ data: [], error: null })),
-    ),
+  then: vi.fn().mockImplementation(resolveNextResult),
 }
 
 export const mockSupabaseClient = {
@@ -23,6 +40,7 @@ export const mockSupabaseClient = {
 export const mockCreateClient = vi.fn(() => mockSupabaseClient)
 
 export function resetMocks() {
+  queuedResults.length = 0
   mockQueryChain.select.mockReset().mockReturnThis()
   mockQueryChain.insert.mockReset().mockReturnThis()
   mockQueryChain.update.mockReset().mockReturnThis()
@@ -31,11 +49,7 @@ export function resetMocks() {
   mockQueryChain.eq.mockReset().mockReturnThis()
   mockQueryChain.single.mockReset().mockReturnThis()
   mockQueryChain.maybeSingle.mockReset().mockReturnThis()
-  mockQueryChain.then
-    .mockReset()
-    .mockImplementation((resolve: (v: unknown) => unknown) =>
-      Promise.resolve(resolve({ data: [], error: null })),
-    )
+  mockQueryChain.then.mockReset().mockImplementation(resolveNextResult)
   ;(mockSupabaseClient.from as ReturnType<typeof vi.fn>).mockReset().mockReturnValue(mockQueryChain)
   mockCreateClient.mockReset().mockImplementation(() => mockSupabaseClient)
 }
