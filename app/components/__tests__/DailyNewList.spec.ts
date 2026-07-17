@@ -67,12 +67,56 @@ describe('DailyNewList', () => {
     expect(wrapper.find('.edit-input').exists()).toBe(false)
   })
 
-  it('emits remove with the item id when delete button is clicked', async () => {
+  it('shows inline confirmation without emitting remove on first delete click', async () => {
     const wrapper = mount(DailyNewList, { props: { items: mockItems } })
     await wrapper.findAll('.delete-btn')[1].trigger('click')
 
+    expect(wrapper.emitted('remove')).toBeUndefined()
+    expect(wrapper.text()).toContain('削除しますか？')
+    expect(wrapper.find('.confirm-delete-btn').exists()).toBe(true)
+    expect(wrapper.find('.cancel-btn').exists()).toBe(true)
+  })
+
+  it('emits remove with the item id when confirm button is clicked', async () => {
+    const wrapper = mount(DailyNewList, { props: { items: mockItems } })
+    await wrapper.findAll('.delete-btn')[1].trigger('click')
+    await wrapper.find('.confirm-delete-btn').trigger('click')
+
     const emitted = wrapper.emitted('remove')
     expect(emitted).toBeTruthy()
+    expect(emitted).toHaveLength(1)
     expect(emitted![0]).toEqual(['2'])
+    expect(wrapper.find('.confirm-delete-btn').exists()).toBe(false)
+  })
+
+  it('returns to view mode without emitting remove when cancel button is clicked', async () => {
+    const wrapper = mount(DailyNewList, { props: { items: mockItems } })
+    await wrapper.findAll('.delete-btn')[1].trigger('click')
+    await wrapper.find('.cancel-btn').trigger('click')
+
+    expect(wrapper.emitted('remove')).toBeUndefined()
+    expect(wrapper.find('.confirm-delete-btn').exists()).toBe(false)
+    expect(wrapper.findAll('.delete-btn')).toHaveLength(2)
+  })
+
+  it('resets delete confirmation when edit is started on another item', async () => {
+    const wrapper = mount(DailyNewList, { props: { items: mockItems } })
+    await wrapper.findAll('.delete-btn')[1].trigger('click')
+    await wrapper.findAll('.edit-btn')[0].trigger('click')
+
+    expect(wrapper.find('.confirm-delete-btn').exists()).toBe(false)
+    expect(wrapper.emitted('remove')).toBeUndefined()
+  })
+
+  it('moves delete confirmation to the other item when its delete button is clicked', async () => {
+    const wrapper = mount(DailyNewList, { props: { items: mockItems } })
+    await wrapper.findAll('.delete-btn')[1].trigger('click')
+    await wrapper.find('.delete-btn').trigger('click')
+    await wrapper.find('.confirm-delete-btn').trigger('click')
+
+    const emitted = wrapper.emitted('remove')
+    expect(emitted).toBeTruthy()
+    expect(emitted).toHaveLength(1)
+    expect(emitted![0]).toEqual(['1'])
   })
 })
