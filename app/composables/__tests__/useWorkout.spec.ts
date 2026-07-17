@@ -401,7 +401,7 @@ describe('useWorkout', () => {
   })
 
   describe('create()', () => {
-    it('inserts a new record and refreshes the list', async () => {
+    it('inserts a new record and reflects the returned row without re-fetching the list', async () => {
       mockTable([
         {
           id: 'new-1',
@@ -422,8 +422,11 @@ describe('useWorkout', () => {
         intensity: 60,
         reps: 10,
       })
-      // create 成功時にメニュー候補の軽量クエリも再取得される
-      expect(mockQueryChain.select).toHaveBeenCalledWith('menu, category')
+      // insert チェーンの .select()（引数なし）だけが呼ばれ、一覧・メニュー候補の再フェッチは行われない
+      expect(mockQueryChain.select).toHaveBeenCalledTimes(1)
+      expect(mockQueryChain.select).toHaveBeenCalledWith()
+      expect(mockQueryChain.select).not.toHaveBeenCalledWith('*')
+      expect(mockQueryChain.select).not.toHaveBeenCalledWith('menu, category')
       expect(error.value).toBeNull()
       expect(loading.value).toBe(false)
       expect(items.value).toHaveLength(1)
@@ -435,28 +438,110 @@ describe('useWorkout', () => {
       })
     })
 
-    it('refreshes with the active category filter after insert', async () => {
-      mockTable([])
+    it('adds the new menu to menuSuggestions and getMenuCandidates', async () => {
+      mockTable([
+        {
+          id: 'new-1',
+          category: 'legs',
+          menu: 'スクワット',
+          intensity: 80,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+
+      const { menuSuggestions, getMenuCandidates, create } = useWorkout()
+      expect(menuSuggestions.value).toEqual([])
+
+      await create({ category: 'legs', menu: 'スクワット', intensity: 80, reps: 10 })
+
+      expect(menuSuggestions.value).toContain('スクワット')
+      expect(getMenuCandidates(ref('legs')).value).toContain('スクワット')
+    })
+
+    it('inserts the row into items at the sortOrder position, same as a re-fetch', async () => {
+      mockTable([
+        {
+          id: 'chest-3',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-03T00:00:00Z',
+        },
+        {
+          id: 'chest-1',
+          category: 'chest',
+          menu: 'ダンベルフライ',
+          intensity: 20,
+          reps: 12,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
 
       const { items, fetchList, create } = useWorkout()
+      await fetchList('chest')
+      expect(items.value.map((r) => r.id)).toEqual(['chest-3', 'chest-1'])
+
+      resetMocks()
+      mockTable([
+        {
+          id: 'chest-2',
+          category: 'chest',
+          menu: 'インクラインプレス',
+          intensity: 40,
+          reps: 10,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      ])
+      await create({
+        category: 'chest',
+        menu: 'インクラインプレス',
+        intensity: 40,
+        reps: 10,
+        date: '2024-01-02T00:00:00Z',
+      })
+
+      // 一覧の再 select（eq によるカテゴリ絞り込みクエリ）は実行されない
+      expect(mockQueryChain.eq).not.toHaveBeenCalled()
+      expect(mockQueryChain.select).toHaveBeenCalledTimes(1)
+      // 再フェッチした場合と同じ desc 並びで途中に挿入される
+      expect(items.value.map((r) => r.id)).toEqual(['chest-3', 'chest-2', 'chest-1'])
+    })
+
+    it('does not add to items when the created category differs from the active filter', async () => {
+      mockTable([])
+
+      const { items, menuSuggestions, fetchList, create } = useWorkout()
       await fetchList('chest')
       expect(items.value).toHaveLength(0)
 
       mockTable([
         {
-          id: 'chest-1',
-          category: 'chest',
-          menu: 'ベンチプレス',
-          intensity: 60,
-          reps: 10,
+          id: 'back-1',
+          category: 'back',
+          menu: 'ラットプルダウン',
+          intensity: 50,
+          reps: 12,
           created_at: '2024-01-02T00:00:00Z',
         },
       ])
+      await create({ category: 'back', menu: 'ラットプルダウン', intensity: 50, reps: 12 })
+
+      // chest 絞り込み中のため items には入らないが、メニュー候補には反映される
+      expect(items.value).toHaveLength(0)
+      expect(menuSuggestions.value).toContain('ラットプルダウン')
+    })
+
+    it('falls back to re-fetching when insert returns no rows', async () => {
+      // デフォルトの then は { data: [], error: null } を返す＝返却行なし
+      const { error, create } = useWorkout()
       await create({ category: 'chest', menu: 'ベンチプレス', intensity: 60, reps: 10 })
 
-      expect(mockQueryChain.eq).toHaveBeenLastCalledWith('category', 'chest')
-      expect(items.value).toHaveLength(1)
-      expect(items.value.every((r) => r.category === 'chest')).toBe(true)
+      // ローカル状態と DB がずれた可能性があるため一覧とメニュー候補を再フェッチする
+      expect(mockQueryChain.select).toHaveBeenCalledWith('*')
+      expect(mockQueryChain.select).toHaveBeenCalledWith('menu, category')
+      expect(error.value).toBeNull()
     })
 
     it('passes provided date as created_at', async () => {
@@ -490,16 +575,20 @@ describe('useWorkout', () => {
       expect(items.value[0].created_at).toBe('2024-01-15T00:00:00Z')
     })
 
-    it('sets error when insert fails', async () => {
+    it('sets error and leaves local state untouched when insert fails', async () => {
       mockQueryChain.then.mockImplementation((resolve: (v: unknown) => unknown) =>
         Promise.resolve(resolve({ data: null, error: { message: 'insert failed' } })),
       )
 
-      const { items, error, create } = useWorkout()
+      const { items, menuSuggestions, error, create } = useWorkout()
       await create({ category: 'chest', menu: 'ベンチプレス', intensity: 60, reps: 10 })
 
       expect(error.value).toBe('insert failed')
       expect(items.value).toEqual([])
+      expect(menuSuggestions.value).toEqual([])
+      // insert が失敗しただけなのでロールバックの再フェッチは行わない
+      expect(mockQueryChain.select).not.toHaveBeenCalledWith('*')
+      expect(mockQueryChain.select).not.toHaveBeenCalledWith('menu, category')
     })
   })
 })

@@ -6,7 +6,7 @@ import { useSupabase } from '~/composables/useSupabase'
 
 const items = ref<WorkoutRecord[]>([])
 // メニュー候補はカテゴリ絞り込み中でも全カテゴリのメニューを対象とするため、
-// 候補算出に必要な列だけを items とは別に保持する（取得は初回と create 成功時のみ）
+// 候補算出に必要な列だけを items とは別に保持する（取得は初回のみ。create 成功時は返却行を直接反映）
 const menuRecords = ref<Pick<WorkoutRecord, 'menu' | 'category'>[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -56,7 +56,7 @@ export const useWorkout = () => {
     date?: string
   }) {
     await withLoading(loading, error, async () => {
-      const { error: insertError } = await useSupabase()
+      const { data, error: insertError } = await useSupabase()
         .from('workout_records')
         .insert({
           category: payload.category,
@@ -65,12 +65,25 @@ export const useWorkout = () => {
           reps: payload.reps,
           ...(payload.date ? { created_at: payload.date } : {}),
         })
+        .select()
       if (insertError) {
         error.value = insertError.message
         return
       }
-      await fetchList(lastCategory.value)
-      await fetchMenuRecords()
+      const inserted = data?.[0]
+      if (!inserted) {
+        // 返却行が得られずローカル状態と DB がずれた可能性があるため、再フェッチで復旧する
+        await fetchList(lastCategory.value)
+        await fetchMenuRecords()
+        return
+      }
+      menuRecords.value = [
+        ...menuRecords.value,
+        { menu: inserted.menu, category: inserted.category },
+      ]
+      if (!lastCategory.value || inserted.category === lastCategory.value) {
+        items.value = sortByDate([...items.value, inserted], sortOrder.value)
+      }
     })
   }
 
