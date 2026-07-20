@@ -1,72 +1,36 @@
-import type { WorkoutCategory } from './domain'
+import type { DailyNew, Topic, WorkoutRecord } from './domain'
+
+// Row は domain.ts の型をそのまま採用し、Insert/Update はそこから派生させる
+// （id / created_at は DB 側で自動採番されるため省略可能にする）。
+type WithOptionalAutoFields<T extends { id: string; created_at: string }> = Omit<
+  T,
+  'id' | 'created_at'
+> &
+  Partial<Pick<T, 'id' | 'created_at'>>
+
+type DailyNewInsert = WithOptionalAutoFields<DailyNew>
+type TopicInsert = WithOptionalAutoFields<Topic>
+type WorkoutRecordInsert = WithOptionalAutoFields<WorkoutRecord>
 
 export type Database = {
   public: {
     Tables: {
       daily_new: {
-        Row: {
-          id: string
-          title: string
-          content: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          content: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          content?: string
-          created_at?: string
-        }
+        Row: DailyNew
+        Insert: DailyNewInsert
+        Update: Partial<DailyNewInsert>
         Relationships: []
       }
       topics: {
-        Row: {
-          id: string
-          content: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          content: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          content?: string
-          created_at?: string
-        }
+        Row: Topic
+        Insert: TopicInsert
+        Update: Partial<TopicInsert>
         Relationships: []
       }
       workout_records: {
-        Row: {
-          id: string
-          category: WorkoutCategory
-          menu: string
-          intensity: number
-          reps: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          category: WorkoutCategory
-          menu: string
-          intensity: number
-          reps: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          category?: WorkoutCategory
-          menu?: string
-          intensity?: number
-          reps?: number
-          created_at?: string
-        }
+        Row: WorkoutRecord
+        Insert: WorkoutRecordInsert
+        Update: Partial<WorkoutRecordInsert>
         Relationships: []
       }
     }
