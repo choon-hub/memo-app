@@ -2,10 +2,16 @@
 import type { WorkoutCategory, WorkoutRecord } from '#shared/types/domain'
 import { formatDate } from '~/utils/date'
 
-defineProps<{
-  items: WorkoutRecord[]
-  sortOrder: 'asc' | 'desc'
-}>()
+const props = withDefaults(
+  defineProps<{
+    items: WorkoutRecord[]
+    sortOrder: 'asc' | 'desc'
+    loading?: boolean
+  }>(),
+  {
+    loading: false,
+  },
+)
 
 const emit = defineEmits<{
   toggleSort: []
@@ -58,7 +64,14 @@ const categoryLabels: Record<WorkoutCategory, string> = {
         <span class="card-stats">{{ item.intensity }}kg × {{ item.reps }}回</span>
         <div class="card-footer">
           <span class="card-date">{{ formatDate(item.created_at) }}</span>
-          <button type="button" class="copy-btn" @click="emit('copy', item)">コピー</button>
+          <button
+            type="button"
+            class="copy-btn"
+            :disabled="props.loading"
+            @click="emit('copy', item)"
+          >
+            コピー
+          </button>
         </div>
       </div>
     </div>
@@ -194,7 +207,12 @@ const categoryLabels: Record<WorkoutCategory, string> = {
   transition: opacity 0.15s;
 }
 
-.copy-btn:hover {
+.copy-btn:hover:not(:disabled) {
   opacity: 1;
+}
+
+.copy-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

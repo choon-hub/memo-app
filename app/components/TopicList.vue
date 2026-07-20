@@ -3,11 +3,16 @@ import { ref } from 'vue'
 import type { Topic } from '#shared/types/domain'
 import { formatDate } from '~/utils/date'
 
-const props = defineProps<{
-  items: Topic[]
-  sortOrder: 'asc' | 'desc'
-  loading: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    items: Topic[]
+    sortOrder: 'asc' | 'desc'
+    loading?: boolean
+  }>(),
+  {
+    loading: false,
+  },
+)
 
 const emit = defineEmits<{
   toggleSort: []
