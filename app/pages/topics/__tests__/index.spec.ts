@@ -4,18 +4,8 @@ import { defineComponent, h, Suspense, ref } from 'vue'
 import TopicsPage from '../index.vue'
 
 vi.mock('#app/composables/asyncData', async () => {
-  const { ref } = await import('vue')
-  return {
-    useAsyncData: vi.fn(async (_key: unknown, fn?: () => unknown) => {
-      if (typeof fn === 'function') await fn()
-      return { data: ref(null), pending: ref(false), refresh: vi.fn(), execute: vi.fn() }
-    }),
-    useLazyAsyncData: vi.fn(),
-    useNuxtData: vi.fn(() => ({ data: ref(null) })),
-    refreshNuxtData: vi.fn(),
-    clearNuxtData: vi.fn(),
-    createUseAsyncData: vi.fn(),
-  }
+  const { createAsyncDataMock } = await import('../../../../test/helpers/nuxt')
+  return createAsyncDataMock()
 })
 
 const mockFetchList = vi.fn()
