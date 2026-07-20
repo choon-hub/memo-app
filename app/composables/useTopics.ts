@@ -77,5 +77,16 @@ export const useTopics = () => {
     })
   }
 
-  return { items, loading, error, sortOrder, fetchList, toggleSortOrder, create, update }
+  async function remove(id: string) {
+    await withLoading(loading, error, async () => {
+      const { error: deleteError } = await useSupabase().from('topics').delete().eq('id', id)
+      if (deleteError) {
+        error.value = deleteError.message
+        return
+      }
+      items.value = items.value.filter((item) => item.id !== id)
+    })
+  }
+
+  return { items, loading, error, sortOrder, fetchList, toggleSortOrder, create, update, remove }
 }

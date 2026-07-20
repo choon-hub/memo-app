@@ -5,7 +5,8 @@ import TopicForm from '~/components/TopicForm.vue'
 import TopicList from '~/components/TopicList.vue'
 import SkeletonList from '~/components/SkeletonList.vue'
 
-const { items, loading, error, sortOrder, fetchList, create, update, toggleSortOrder } = useTopics()
+const { items, loading, error, sortOrder, fetchList, create, update, remove, toggleSortOrder } =
+  useTopics()
 
 await useAsyncData('topics', fetchList)
 
@@ -15,6 +16,10 @@ async function handleSubmit(payload: { content: string; date: string }) {
 
 async function handleUpdate(id: string, content: string) {
   await update(id, { content })
+}
+
+async function handleRemove(id: string) {
+  await remove(id)
 }
 </script>
 
@@ -31,6 +36,7 @@ async function handleUpdate(id: string, content: string) {
       :loading="loading"
       @toggle-sort="toggleSortOrder"
       @update="handleUpdate"
+      @remove="handleRemove"
     />
   </div>
 </template>
