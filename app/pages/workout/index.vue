@@ -76,6 +76,7 @@ function handleCopy(record: WorkoutRecord) {
       v-else
       :items="items"
       :sort-order="sortOrder"
+      :loading="loading"
       @toggle-sort="toggleSortOrder"
       @copy="handleCopy"
     />

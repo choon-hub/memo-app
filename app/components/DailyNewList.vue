@@ -3,11 +3,16 @@ import { ref } from 'vue'
 import type { DailyNew } from '#shared/types/domain'
 import { formatDate } from '~/utils/date'
 
-const props = defineProps<{
-  items: DailyNew[]
-  sortOrder: 'asc' | 'desc'
-  loading?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    items: DailyNew[]
+    sortOrder: 'asc' | 'desc'
+    loading?: boolean
+  }>(),
+  {
+    loading: false,
+  },
+)
 
 const emit = defineEmits<{
   toggleSort: []
