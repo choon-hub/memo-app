@@ -3,6 +3,14 @@ import { mount } from '@vue/test-utils'
 import DailyNewForm from '../DailyNewForm.vue'
 
 describe('DailyNewForm', () => {
+  it('sets the date field to today on mount', async () => {
+    const wrapper = mount(DailyNewForm)
+    await wrapper.vm.$nextTick()
+    expect((wrapper.find('input[type="date"]').element as HTMLInputElement).value).toBe(
+      new Date().toLocaleDateString('en-CA'),
+    )
+  })
+
   it('has submit button disabled when title and content are empty', () => {
     const wrapper = mount(DailyNewForm)
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
@@ -60,5 +68,32 @@ describe('DailyNewForm', () => {
     await wrapper.find('textarea').setValue('内容です')
     await wrapper.find('input[type="date"]').setValue('2024-01-15')
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('emits submit when pressing Cmd+Enter in the title input', async () => {
+    const wrapper = mount(DailyNewForm)
+    await wrapper.find('input[type="text"]').setValue('タイトル')
+    await wrapper.find('textarea').setValue('内容です')
+    await wrapper.find('input[type="date"]').setValue('2024-01-15')
+    await wrapper.find('input[type="text"]').trigger('keydown', { key: 'Enter', metaKey: true })
+    expect(wrapper.emitted('submit')).toHaveLength(1)
+  })
+
+  it('emits submit when pressing Ctrl+Enter in the content textarea', async () => {
+    const wrapper = mount(DailyNewForm)
+    await wrapper.find('input[type="text"]').setValue('タイトル')
+    await wrapper.find('textarea').setValue('内容です')
+    await wrapper.find('input[type="date"]').setValue('2024-01-15')
+    await wrapper.find('textarea').trigger('keydown', { key: 'Enter', ctrlKey: true })
+    expect(wrapper.emitted('submit')).toHaveLength(1)
+  })
+
+  it('does not emit submit on plain Enter in the content textarea', async () => {
+    const wrapper = mount(DailyNewForm)
+    await wrapper.find('input[type="text"]').setValue('タイトル')
+    await wrapper.find('textarea').setValue('内容です')
+    await wrapper.find('input[type="date"]').setValue('2024-01-15')
+    await wrapper.find('textarea').trigger('keydown', { key: 'Enter' })
+    expect(wrapper.emitted('submit')).toBeUndefined()
   })
 })

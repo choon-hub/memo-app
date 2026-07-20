@@ -40,6 +40,8 @@ function handleSubmit() {
         type="text"
         class="input"
         placeholder="今日学んだことのタイトル"
+        @keydown.enter.meta.prevent="handleSubmit"
+        @keydown.enter.ctrl.prevent="handleSubmit"
       />
     </div>
     <div class="field">
@@ -50,6 +52,8 @@ function handleSubmit() {
         class="textarea"
         placeholder="内容を詳しく書いてみましょう…"
         rows="2"
+        @keydown.enter.meta.prevent="handleSubmit"
+        @keydown.enter.ctrl.prevent="handleSubmit"
       />
     </div>
     <div class="field">
