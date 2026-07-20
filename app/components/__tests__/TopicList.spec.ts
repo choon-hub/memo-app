@@ -37,4 +37,10 @@ describe('TopicList', () => {
     const wrapper = mount(TopicList, { props: { items: multilineItems } })
     expect(wrapper.find('.card-content').text()).toBe('1行目\n2行目')
   })
+
+  it('emits remove with the item id when the delete button is clicked', async () => {
+    const wrapper = mount(TopicList, { props: { items: mockItems } })
+    await wrapper.findAll('.delete-btn')[0].trigger('click')
+    expect(wrapper.emitted('remove')).toEqual([['1']])
+  })
 })

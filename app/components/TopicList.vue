@@ -17,6 +17,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   toggleSort: []
   update: [id: string, content: string]
+  remove: [id: string]
 }>()
 
 const editingId = ref<string | null>(null)
@@ -88,7 +89,24 @@ function saveEdit() {
           <p class="card-content">{{ item.content }}</p>
           <div class="card-footer">
             <span class="card-date">{{ formatDate(item.created_at) }}</span>
-            <button type="button" class="edit-btn" @click="startEdit(item)">編集</button>
+            <div class="card-actions">
+              <button
+                type="button"
+                class="edit-btn"
+                :disabled="props.loading"
+                @click="startEdit(item)"
+              >
+                編集
+              </button>
+              <button
+                type="button"
+                class="delete-btn"
+                :disabled="props.loading"
+                @click="emit('remove', item.id)"
+              >
+                削除
+              </button>
+            </div>
           </div>
         </template>
       </div>
@@ -191,6 +209,33 @@ function saveEdit() {
   color: #bab9d0;
 }
 
+.card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.delete-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e05252;
+  background: rgba(224, 82, 82, 0.08);
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background: rgba(224, 82, 82, 0.15);
+}
+
+.delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .edit-btn {
   font-size: 11px;
   font-weight: 600;
@@ -204,8 +249,13 @@ function saveEdit() {
   transition: background 0.15s;
 }
 
-.edit-btn:hover {
+.edit-btn:hover:not(:disabled) {
   background: rgba(71, 84, 240, 0.15);
+}
+
+.edit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .edit-textarea {

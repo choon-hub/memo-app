@@ -167,6 +167,60 @@ describe('useTopics', () => {
     })
   })
 
+  describe('remove()', () => {
+    it('removes the item locally without refetching the list', async () => {
+      mockTable([
+        { id: '1', content: 'To remove', created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Keep', created_at: '2024-01-02T00:00:00Z' },
+      ])
+
+      const { items, loading, error, fetchList, remove } = useTopics()
+      await fetchList()
+
+      await remove('1')
+
+      expect(mockQueryChain.delete).toHaveBeenCalled()
+      expect(mockQueryChain.eq).toHaveBeenCalledWith('id', '1')
+      // fetchList と delete の 2 回のみ（一覧の再 select なし）
+      expect(mockSupabaseClient.from).toHaveBeenCalledTimes(2)
+      expect(mockQueryChain.select).toHaveBeenCalledTimes(1)
+      expect(error.value).toBeNull()
+      expect(loading.value).toBe(false)
+      expect(items.value).toHaveLength(1)
+      expect(items.value[0].id).toBe('2')
+    })
+
+    it('preserves sort order (desc) after remove', async () => {
+      mockTable([
+        { id: '1', content: 'Oldest', created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Middle', created_at: '2024-01-02T00:00:00Z' },
+        { id: '3', content: 'Newest', created_at: '2024-01-03T00:00:00Z' },
+      ])
+
+      const { items, fetchList, remove } = useTopics()
+      await fetchList()
+
+      await remove('2')
+
+      expect(items.value).toHaveLength(2)
+      expect(items.value[0].id).toBe('3')
+      expect(items.value[1].id).toBe('1')
+    })
+
+    it('sets error and keeps items when delete fails', async () => {
+      mockQueryChain.then.mockImplementation((resolve: (v: unknown) => unknown) =>
+        Promise.resolve(resolve({ data: null, error: { message: 'delete failed' } })),
+      )
+
+      const { items, error, remove } = useTopics()
+      items.value = [{ id: '1', content: 'Keep', created_at: '2024-01-01T00:00:00Z' }]
+      await remove('1')
+
+      expect(error.value).toBe('delete failed')
+      expect(items.value).toHaveLength(1)
+    })
+  })
+
   describe('create()', () => {
     it('inserts the returned row into items without refetching the list', async () => {
       mockTable([{ id: 'new-1', content: 'New topic', created_at: '2024-01-01T00:00:00Z' }])
