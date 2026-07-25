@@ -26,8 +26,8 @@ describe('useTopics', () => {
   describe('fetchList()', () => {
     it('returns items sorted by created_at descending', async () => {
       mockTable([
-        { id: '1', content: 'Topic A', created_at: '2024-01-01T00:00:00Z' },
-        { id: '2', content: 'Topic B', created_at: '2024-01-02T00:00:00Z' },
+        { id: '1', content: 'Topic A', persons: [], created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Topic B', persons: [], created_at: '2024-01-02T00:00:00Z' },
       ])
 
       const { items, loading, error, fetchList } = useTopics()
@@ -72,8 +72,8 @@ describe('useTopics', () => {
 
     it('switches to asc and re-sorts the list', async () => {
       mockTable([
-        { id: '1', content: 'Topic A', created_at: '2024-01-01T00:00:00Z' },
-        { id: '2', content: 'Topic B', created_at: '2024-01-02T00:00:00Z' },
+        { id: '1', content: 'Topic A', persons: [], created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Topic B', persons: [], created_at: '2024-01-02T00:00:00Z' },
       ])
 
       const { items, sortOrder, fetchList, toggleSortOrder } = useTopics()
@@ -87,8 +87,8 @@ describe('useTopics', () => {
 
     it('toggles back to desc', async () => {
       mockTable([
-        { id: '1', content: 'Topic A', created_at: '2024-01-01T00:00:00Z' },
-        { id: '2', content: 'Topic B', created_at: '2024-01-02T00:00:00Z' },
+        { id: '1', content: 'Topic A', persons: [], created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Topic B', persons: [], created_at: '2024-01-02T00:00:00Z' },
       ])
 
       const { items, sortOrder, fetchList, toggleSortOrder } = useTopics()
@@ -102,7 +102,7 @@ describe('useTopics', () => {
 
   describe('update()', () => {
     it('applies the returned row to items without refetching the list', async () => {
-      mockTable([{ id: '1', content: 'Original', created_at: '2024-01-01T00:00:00Z' }])
+      mockTable([{ id: '1', content: 'Original', persons: [], created_at: '2024-01-01T00:00:00Z' }])
 
       const { items, loading, error, fetchList, update } = useTopics()
       await fetchList()
@@ -110,7 +110,7 @@ describe('useTopics', () => {
       mockQueryChain.select.mockClear()
       vi.mocked(mockSupabaseClient.from).mockClear()
 
-      mockTable([{ id: '1', content: 'Updated', created_at: '2024-01-01T00:00:00Z' }])
+      mockTable([{ id: '1', content: 'Updated', persons: [], created_at: '2024-01-01T00:00:00Z' }])
       await update('1', { content: 'Updated' })
 
       expect(mockQueryChain.update).toHaveBeenCalledWith({ content: 'Updated' })
@@ -120,20 +120,22 @@ describe('useTopics', () => {
       expect(error.value).toBeNull()
       expect(loading.value).toBe(false)
       expect(items.value).toEqual([
-        { id: '1', content: 'Updated', created_at: '2024-01-01T00:00:00Z' },
+        { id: '1', content: 'Updated', persons: [], created_at: '2024-01-01T00:00:00Z' },
       ])
     })
 
     it('preserves sort order (desc) after update', async () => {
       mockTable([
-        { id: '1', content: 'Older', created_at: '2024-01-01T00:00:00Z' },
-        { id: '2', content: 'Newer', created_at: '2024-01-02T00:00:00Z' },
+        { id: '1', content: 'Older', persons: [], created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Newer', persons: [], created_at: '2024-01-02T00:00:00Z' },
       ])
 
       const { items, fetchList, update } = useTopics()
       await fetchList()
 
-      mockTable([{ id: '2', content: 'Newer updated', created_at: '2024-01-02T00:00:00Z' }])
+      mockTable([
+        { id: '2', content: 'Newer updated', persons: [], created_at: '2024-01-02T00:00:00Z' },
+      ])
       await update('2', { content: 'Newer updated' })
 
       expect(items.value.map((item) => item.id)).toEqual(['2', '1'])
@@ -142,7 +144,7 @@ describe('useTopics', () => {
     })
 
     it('refetches the list as rollback when no row is returned', async () => {
-      mockTable([{ id: '1', content: 'Original', created_at: '2024-01-01T00:00:00Z' }])
+      mockTable([{ id: '1', content: 'Original', persons: [], created_at: '2024-01-01T00:00:00Z' }])
 
       const { fetchList, update } = useTopics()
       await fetchList()
@@ -170,8 +172,8 @@ describe('useTopics', () => {
   describe('remove()', () => {
     it('removes the item locally without refetching the list', async () => {
       mockTable([
-        { id: '1', content: 'To remove', created_at: '2024-01-01T00:00:00Z' },
-        { id: '2', content: 'Keep', created_at: '2024-01-02T00:00:00Z' },
+        { id: '1', content: 'To remove', persons: [], created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Keep', persons: [], created_at: '2024-01-02T00:00:00Z' },
       ])
 
       const { items, loading, error, fetchList, remove } = useTopics()
@@ -192,9 +194,9 @@ describe('useTopics', () => {
 
     it('preserves sort order (desc) after remove', async () => {
       mockTable([
-        { id: '1', content: 'Oldest', created_at: '2024-01-01T00:00:00Z' },
-        { id: '2', content: 'Middle', created_at: '2024-01-02T00:00:00Z' },
-        { id: '3', content: 'Newest', created_at: '2024-01-03T00:00:00Z' },
+        { id: '1', content: 'Oldest', persons: [], created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Middle', persons: [], created_at: '2024-01-02T00:00:00Z' },
+        { id: '3', content: 'Newest', persons: [], created_at: '2024-01-03T00:00:00Z' },
       ])
 
       const { items, fetchList, remove } = useTopics()
@@ -213,7 +215,7 @@ describe('useTopics', () => {
       )
 
       const { items, error, remove } = useTopics()
-      items.value = [{ id: '1', content: 'Keep', created_at: '2024-01-01T00:00:00Z' }]
+      items.value = [{ id: '1', content: 'Keep', persons: [], created_at: '2024-01-01T00:00:00Z' }]
       await remove('1')
 
       expect(error.value).toBe('delete failed')
@@ -223,43 +225,57 @@ describe('useTopics', () => {
 
   describe('create()', () => {
     it('inserts the returned row into items without refetching the list', async () => {
-      mockTable([{ id: 'new-1', content: 'New topic', created_at: '2024-01-01T00:00:00Z' }])
+      mockTable([
+        { id: 'new-1', content: 'New topic', persons: [], created_at: '2024-01-01T00:00:00Z' },
+      ])
 
       const { items, error, loading, create } = useTopics()
       await create({ content: 'New topic' })
 
-      expect(mockQueryChain.insert).toHaveBeenCalledWith({ content: 'New topic' })
+      expect(mockQueryChain.insert).toHaveBeenCalledWith({ content: 'New topic', persons: [] })
       expect(mockSupabaseClient.from).toHaveBeenCalledTimes(1)
       expect(mockQueryChain.select).not.toHaveBeenCalledWith('*')
       expect(error.value).toBeNull()
       expect(loading.value).toBe(false)
       expect(items.value).toEqual([
-        { id: 'new-1', content: 'New topic', created_at: '2024-01-01T00:00:00Z' },
+        { id: 'new-1', content: 'New topic', persons: [], created_at: '2024-01-01T00:00:00Z' },
       ])
     })
 
     it('passes provided date as created_at', async () => {
-      mockTable([{ id: 'new-1', content: 'Topic with date', created_at: '2024-01-15T00:00:00Z' }])
+      mockTable([
+        {
+          id: 'new-1',
+          content: 'Topic with date',
+          persons: [],
+          created_at: '2024-01-15T00:00:00Z',
+        },
+      ])
 
       const { items, create } = useTopics()
       await create({ content: 'Topic with date', date: '2024-01-15T00:00:00Z' })
 
       expect(mockQueryChain.insert).toHaveBeenCalledWith({
         content: 'Topic with date',
+        persons: [],
         created_at: '2024-01-15T00:00:00Z',
       })
       expect(items.value[0].created_at).toBe('2024-01-15T00:00:00Z')
     })
 
     it('new item appears first when it has the latest created_at', async () => {
-      mockTable([{ id: 'old', content: 'Old topic', created_at: '2024-01-01T00:00:00Z' }])
+      mockTable([
+        { id: 'old', content: 'Old topic', persons: [], created_at: '2024-01-01T00:00:00Z' },
+      ])
 
       const { items, fetchList, create } = useTopics()
       await fetchList()
 
       mockQueryChain.select.mockClear()
 
-      mockTable([{ id: 'new', content: 'New topic', created_at: '2024-01-02T00:00:00Z' }])
+      mockTable([
+        { id: 'new', content: 'New topic', persons: [], created_at: '2024-01-02T00:00:00Z' },
+      ])
       await create({ content: 'New topic', date: '2024-01-02T00:00:00Z' })
 
       expect(mockQueryChain.select).not.toHaveBeenCalledWith('*')
@@ -268,13 +284,17 @@ describe('useTopics', () => {
     })
 
     it('inserts the new item at the end when sort order is asc', async () => {
-      mockTable([{ id: 'old', content: 'Old topic', created_at: '2024-01-01T00:00:00Z' }])
+      mockTable([
+        { id: 'old', content: 'Old topic', persons: [], created_at: '2024-01-01T00:00:00Z' },
+      ])
 
       const { items, sortOrder, fetchList, create } = useTopics()
       sortOrder.value = 'asc'
       await fetchList()
 
-      mockTable([{ id: 'new', content: 'New topic', created_at: '2024-01-02T00:00:00Z' }])
+      mockTable([
+        { id: 'new', content: 'New topic', persons: [], created_at: '2024-01-02T00:00:00Z' },
+      ])
       await create({ content: 'New topic', date: '2024-01-02T00:00:00Z' })
 
       expect(items.value.map((item) => item.id)).toEqual(['old', 'new'])
