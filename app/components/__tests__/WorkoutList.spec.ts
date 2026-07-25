@@ -24,48 +24,76 @@ const mockItems: WorkoutRecord[] = [
 
 describe('WorkoutList', () => {
   it('shows empty state when items array is empty', () => {
-    const wrapper = mount(WorkoutList, { props: { items: [] } })
+    const wrapper = mount(WorkoutList, { props: { items: [], sortOrder: 'desc', loading: false } })
     expect(wrapper.text()).toContain('まだ記録がありません')
   })
 
   it('does not show empty state when items exist', () => {
-    const wrapper = mount(WorkoutList, { props: { items: mockItems } })
+    const wrapper = mount(WorkoutList, {
+      props: { items: mockItems, sortOrder: 'desc', loading: false },
+    })
     expect(wrapper.find('.empty-state').exists()).toBe(false)
   })
 
   it('renders the correct number of cards', () => {
-    const wrapper = mount(WorkoutList, { props: { items: mockItems } })
+    const wrapper = mount(WorkoutList, {
+      props: { items: mockItems, sortOrder: 'desc', loading: false },
+    })
     expect(wrapper.findAll('.card')).toHaveLength(2)
   })
 
   it('renders menu name for each item', () => {
-    const wrapper = mount(WorkoutList, { props: { items: mockItems } })
+    const wrapper = mount(WorkoutList, {
+      props: { items: mockItems, sortOrder: 'desc', loading: false },
+    })
     expect(wrapper.text()).toContain('ベンチプレス')
     expect(wrapper.text()).toContain('懸垂')
   })
 
   it('renders intensity and reps in correct format', () => {
-    const wrapper = mount(WorkoutList, { props: { items: mockItems } })
+    const wrapper = mount(WorkoutList, {
+      props: { items: mockItems, sortOrder: 'desc', loading: false },
+    })
     expect(wrapper.text()).toContain('60kg × 10回')
     expect(wrapper.text()).toContain('0kg × 8回')
   })
 
   it('renders category badge with Japanese label', () => {
-    const wrapper = mount(WorkoutList, { props: { items: mockItems } })
+    const wrapper = mount(WorkoutList, {
+      props: { items: mockItems, sortOrder: 'desc', loading: false },
+    })
     expect(wrapper.text()).toContain('胸')
     expect(wrapper.text()).toContain('背中')
   })
 
   it('renders a copy button for each item', () => {
-    const wrapper = mount(WorkoutList, { props: { items: mockItems, sortOrder: 'desc' } })
+    const wrapper = mount(WorkoutList, {
+      props: { items: mockItems, sortOrder: 'desc', loading: false },
+    })
     expect(wrapper.findAll('.copy-btn')).toHaveLength(2)
   })
 
   it('emits copy event with the correct record when copy button is clicked', async () => {
-    const wrapper = mount(WorkoutList, { props: { items: mockItems, sortOrder: 'desc' } })
+    const wrapper = mount(WorkoutList, {
+      props: { items: mockItems, sortOrder: 'desc', loading: false },
+    })
     await wrapper.findAll('.copy-btn')[0].trigger('click')
     const emitted = wrapper.emitted('copy')
     expect(emitted).toBeTruthy()
     expect(emitted![0][0]).toEqual(mockItems[0])
+  })
+
+  it('shows the spinner overlay when loading is true', () => {
+    const wrapper = mount(WorkoutList, {
+      props: { items: mockItems, sortOrder: 'desc', loading: true },
+    })
+    expect(wrapper.find('.app-spinner-overlay').exists()).toBe(true)
+  })
+
+  it('does not show the spinner overlay when loading is false', () => {
+    const wrapper = mount(WorkoutList, {
+      props: { items: mockItems, sortOrder: 'desc', loading: false },
+    })
+    expect(wrapper.find('.app-spinner-overlay').exists()).toBe(false)
   })
 })

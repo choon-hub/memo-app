@@ -16,7 +16,7 @@ const sortOrder = ref<'asc' | 'desc'>('desc')
 export const useWorkout = () => {
   async function fetchList(category?: WorkoutCategory) {
     lastCategory.value = category
-    if (items.value.length === 0) loading.value = true
+    loading.value = true
     error.value = null
     try {
       let query = useSupabase().from('workout_records').select('*')

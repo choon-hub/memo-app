@@ -14,6 +14,16 @@ describe('TopicList', () => {
     expect(wrapper.text()).toContain('まだ記録がありません')
   })
 
+  it('shows the spinner overlay when loading is true', () => {
+    const wrapper = mount(TopicList, { props: { items: mockItems, loading: true } })
+    expect(wrapper.find('.app-spinner-overlay').exists()).toBe(true)
+  })
+
+  it('does not show the spinner overlay when loading is false', () => {
+    const wrapper = mount(TopicList, { props: { items: mockItems, loading: false } })
+    expect(wrapper.find('.app-spinner-overlay').exists()).toBe(false)
+  })
+
   it('does not show empty state when items exist', () => {
     const wrapper = mount(TopicList, { props: { items: mockItems } })
     expect(wrapper.find('.empty-state').exists()).toBe(false)
