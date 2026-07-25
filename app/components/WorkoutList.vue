@@ -1,17 +1,13 @@
 <script setup lang="ts">
 import type { WorkoutCategory, WorkoutRecord } from '#shared/types/domain'
 import { formatDate } from '~/utils/date'
+import AppSpinner from '~/components/AppSpinner.vue'
 
-const props = withDefaults(
-  defineProps<{
-    items: WorkoutRecord[]
-    sortOrder: 'asc' | 'desc'
-    loading?: boolean
-  }>(),
-  {
-    loading: false,
-  },
-)
+const props = defineProps<{
+  items: WorkoutRecord[]
+  sortOrder: 'asc' | 'desc'
+  loading: boolean
+}>()
 
 const emit = defineEmits<{
   toggleSort: []
@@ -26,7 +22,8 @@ const categoryLabels: Record<WorkoutCategory, string> = {
 </script>
 
 <template>
-  <div>
+  <div class="list-wrapper">
+    <AppSpinner v-if="props.loading" />
     <div class="sort-bar">
       <button type="button" class="sort-btn" @click="emit('toggleSort')">
         {{ sortOrder === 'desc' ? '新しい順' : '古い順' }}
@@ -79,6 +76,10 @@ const categoryLabels: Record<WorkoutCategory, string> = {
 </template>
 
 <style scoped>
+.list-wrapper {
+  position: relative;
+}
+
 .sort-bar {
   display: flex;
   justify-content: flex-end;

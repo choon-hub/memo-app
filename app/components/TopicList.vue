@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import type { Topic } from '#shared/types/domain'
 import { formatDate } from '~/utils/date'
+import AppSpinner from '~/components/AppSpinner.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -42,7 +43,8 @@ function saveEdit() {
 </script>
 
 <template>
-  <div>
+  <div class="list-wrapper">
+    <AppSpinner v-if="props.loading" />
     <div class="sort-bar">
       <button type="button" class="sort-btn" @click="emit('toggleSort')">
         {{ sortOrder === 'desc' ? '新しい順' : '古い順' }}
@@ -115,6 +117,10 @@ function saveEdit() {
 </template>
 
 <style scoped>
+.list-wrapper {
+  position: relative;
+}
+
 .sort-bar {
   display: flex;
   justify-content: flex-end;

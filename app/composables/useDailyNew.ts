@@ -11,7 +11,7 @@ const sortOrder = ref<'asc' | 'desc'>('desc')
 
 export const useDailyNew = () => {
   async function fetchList() {
-    if (items.value.length === 0) loading.value = true
+    loading.value = true
     error.value = null
     try {
       const { data, error: fetchError } = await useSupabase().from('daily_new').select('*')
