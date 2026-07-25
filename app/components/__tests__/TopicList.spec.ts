@@ -4,8 +4,8 @@ import TopicList from '../TopicList.vue'
 import type { Topic } from '#shared/types/domain'
 
 const mockItems: Topic[] = [
-  { id: '1', content: 'トピック1', created_at: '2024-01-02T00:00:00Z' },
-  { id: '2', content: 'トピック2', created_at: '2024-01-01T00:00:00Z' },
+  { id: '1', content: 'トピック1', persons: [], created_at: '2024-01-02T00:00:00Z' },
+  { id: '2', content: 'トピック2', persons: [], created_at: '2024-01-01T00:00:00Z' },
 ]
 
 describe('TopicList', () => {
@@ -32,7 +32,7 @@ describe('TopicList', () => {
 
   it('renders multiline content with line breaks preserved', () => {
     const multilineItems: Topic[] = [
-      { id: '1', content: '1行目\n2行目', created_at: '2024-01-02T00:00:00Z' },
+      { id: '1', content: '1行目\n2行目', persons: [], created_at: '2024-01-02T00:00:00Z' },
     ]
     const wrapper = mount(TopicList, { props: { items: multilineItems } })
     expect(wrapper.find('.card-content').text()).toBe('1行目\n2行目')

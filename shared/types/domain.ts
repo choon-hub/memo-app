@@ -10,6 +10,7 @@ export type DailyNew = {
 export type Topic = {
   id: string
   content: string
+  persons: string[]
   created_at: string
 }
 

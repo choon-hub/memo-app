@@ -36,6 +36,7 @@ export const useTopics = () => {
         .from('topics')
         .insert({
           content: payload.content,
+          persons: [],
           ...(payload.date ? { created_at: payload.date } : {}),
         })
         .select()
