@@ -591,4 +591,71 @@ describe('useWorkout', () => {
       expect(mockQueryChain.select).not.toHaveBeenCalledWith('menu, category')
     })
   })
+
+  describe('createMany()', () => {
+    it('inserts an array of payloads in a single call and refetches the list and menu records', async () => {
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          category: 'back',
+          menu: 'ラットプルダウン',
+          intensity: 50,
+          reps: 12,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      ])
+
+      const { items, menuSuggestions, error, loading, createMany } = useWorkout()
+      await createMany([
+        { category: 'chest', menu: 'ベンチプレス', intensity: 60, reps: 10 },
+        {
+          category: 'back',
+          menu: 'ラットプルダウン',
+          intensity: 50,
+          reps: 12,
+          date: '2024-01-02T00:00:00Z',
+        },
+      ])
+
+      expect(mockQueryChain.insert).toHaveBeenCalledWith([
+        { category: 'chest', menu: 'ベンチプレス', intensity: 60, reps: 10 },
+        {
+          category: 'back',
+          menu: 'ラットプルダウン',
+          intensity: 50,
+          reps: 12,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      ])
+      expect(mockQueryChain.select).toHaveBeenCalledWith('*')
+      expect(mockQueryChain.select).toHaveBeenCalledWith('menu, category')
+      expect(error.value).toBeNull()
+      expect(loading.value).toBe(false)
+      expect(items.value).toHaveLength(2)
+      expect(menuSuggestions.value).toContain('ベンチプレス')
+      expect(menuSuggestions.value).toContain('ラットプルダウン')
+    })
+
+    it('sets error when bulk insert fails without refetching', async () => {
+      mockQueryChain.then.mockImplementation((resolve: (v: unknown) => unknown) =>
+        Promise.resolve(resolve({ data: null, error: { message: 'bulk insert failed' } })),
+      )
+
+      const { items, error, createMany } = useWorkout()
+      await createMany([{ category: 'chest', menu: 'ベンチプレス', intensity: 60, reps: 10 }])
+
+      expect(error.value).toBe('bulk insert failed')
+      expect(items.value).toEqual([])
+      expect(mockQueryChain.select).not.toHaveBeenCalledWith('*')
+      expect(mockQueryChain.select).not.toHaveBeenCalledWith('menu, category')
+    })
+  })
 })

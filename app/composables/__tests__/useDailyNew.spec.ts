@@ -389,4 +389,48 @@ describe('useDailyNew', () => {
       expect(items.value).toEqual([])
     })
   })
+
+  describe('createMany()', () => {
+    it('inserts an array of payloads in a single call and refetches the list', async () => {
+      queueResult({ data: null, error: null })
+      queueResult({
+        data: [
+          { id: '1', title: 'Title 1', content: 'Content 1', created_at: '2024-01-01T00:00:00Z' },
+          { id: '2', title: 'Title 2', content: 'Content 2', created_at: '2024-01-02T00:00:00Z' },
+        ],
+        error: null,
+      })
+
+      const { items, error, loading, createMany } = useDailyNew()
+      await createMany([
+        { title: 'Title 1', content: 'Content 1' },
+        { title: 'Title 2', content: 'Content 2', date: '2024-01-02T00:00:00Z' },
+      ])
+
+      expect(mockQueryChain.insert).toHaveBeenCalledWith([
+        { title: 'Title 1', content: 'Content 1' },
+        { title: 'Title 2', content: 'Content 2', created_at: '2024-01-02T00:00:00Z' },
+      ])
+      // insert と fetchList による再取得の 2 回のみ
+      expect(mockSupabaseClient.from).toHaveBeenCalledTimes(2)
+      expect(mockQueryChain.select).toHaveBeenCalledWith('*')
+      expect(error.value).toBeNull()
+      expect(loading.value).toBe(false)
+      expect(items.value).toHaveLength(2)
+      expect(items.value[0].id).toBe('2')
+    })
+
+    it('sets error when bulk insert fails without refetching', async () => {
+      mockQueryChain.then.mockImplementation((resolve: (v: unknown) => unknown) =>
+        Promise.resolve(resolve({ data: null, error: { message: 'bulk insert failed' } })),
+      )
+
+      const { items, error, createMany } = useDailyNew()
+      await createMany([{ title: 'Title 1', content: 'Content 1' }])
+
+      expect(error.value).toBe('bulk insert failed')
+      expect(items.value).toEqual([])
+      expect(mockSupabaseClient.from).toHaveBeenCalledTimes(1)
+    })
+  })
 })

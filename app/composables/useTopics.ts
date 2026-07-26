@@ -54,6 +54,25 @@ export const useTopics = () => {
     })
   }
 
+  async function createMany(payloads: { content: string; date?: string }[]) {
+    await withLoading(loading, error, async () => {
+      const { error: insertError } = await useSupabase()
+        .from('topics')
+        .insert(
+          payloads.map((payload) => ({
+            content: payload.content,
+            persons: [],
+            ...(payload.date ? { created_at: payload.date } : {}),
+          })),
+        )
+      if (insertError) {
+        error.value = insertError.message
+        return
+      }
+      await fetchList()
+    })
+  }
+
   async function update(id: string, payload: { content: string }) {
     await withLoading(loading, error, async () => {
       const { data, error: updateError } = await useSupabase()
@@ -89,5 +108,16 @@ export const useTopics = () => {
     })
   }
 
-  return { items, loading, error, sortOrder, fetchList, toggleSortOrder, create, update, remove }
+  return {
+    items,
+    loading,
+    error,
+    sortOrder,
+    fetchList,
+    toggleSortOrder,
+    create,
+    createMany,
+    update,
+    remove,
+  }
 }
