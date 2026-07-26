@@ -34,11 +34,3 @@ body {
   white-space: nowrap;
   border: 0;
 }
-
-.error {
-  padding: 12px;
-  background: #fee2e2;
-  border-radius: 8px;
-  color: #dc2626;
-  font-size: 13px;
-}

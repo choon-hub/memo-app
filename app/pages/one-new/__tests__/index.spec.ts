@@ -51,6 +51,15 @@ describe('one-new page', () => {
     expect(wrapper.text()).toContain('データの取得に失敗しました')
   })
 
+  it('calls fetchList again when AppErrorAlert emits retry', async () => {
+    mockError.value = 'データの取得に失敗しました'
+    const wrapper = await mountPage()
+    mockFetchList.mockClear()
+    const errorAlert = wrapper.findComponent({ name: 'AppErrorAlert' })
+    await errorAlert.vm.$emit('retry')
+    expect(mockFetchList).toHaveBeenCalledOnce()
+  })
+
   it('renders DailyNewList with items from composable', async () => {
     mockItems.value = [
       { id: '1', title: 'テスト', content: '内容', created_at: '2024-01-01T00:00:00Z' },

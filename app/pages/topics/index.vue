@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAsyncData } from '#app'
 import { useTopics } from '~/composables/useTopics'
+import AppErrorAlert from '~/components/AppErrorAlert.vue'
 import TopicForm from '~/components/TopicForm.vue'
 import TopicList from '~/components/TopicList.vue'
 import SkeletonList from '~/components/SkeletonList.vue'
@@ -26,7 +27,7 @@ async function handleRemove(id: string) {
 <template>
   <div class="page">
     <h1 class="sr-only">日々のトピック</h1>
-    <div v-if="error" class="error">{{ error }}</div>
+    <AppErrorAlert v-if="error" :message="error" @retry="fetchList()" />
     <TopicForm :loading="loading" @submit="handleSubmit" />
     <SkeletonList v-if="loading && items.length === 0" />
     <TopicList
