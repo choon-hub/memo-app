@@ -167,6 +167,36 @@ describe('useTopics', () => {
 
       expect(error.value).toBe('update failed')
     })
+
+    it('includes persons in the update payload when provided', async () => {
+      mockTable([{ id: '1', content: 'Original', persons: [], created_at: '2024-01-01T00:00:00Z' }])
+
+      const { items, fetchList, update } = useTopics()
+      await fetchList()
+
+      mockTable([
+        {
+          id: '1',
+          content: 'Updated',
+          persons: ['Alice', 'Bob'],
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+      await update('1', { content: 'Updated', persons: ['Alice', 'Bob'] })
+
+      expect(mockQueryChain.update).toHaveBeenCalledWith({
+        content: 'Updated',
+        persons: ['Alice', 'Bob'],
+      })
+      expect(items.value).toEqual([
+        {
+          id: '1',
+          content: 'Updated',
+          persons: ['Alice', 'Bob'],
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+    })
   })
 
   describe('remove()', () => {
@@ -321,6 +351,26 @@ describe('useTopics', () => {
 
       expect(error.value).toBe('insert failed')
       expect(items.value).toEqual([])
+    })
+
+    it('passes provided persons in the insert payload', async () => {
+      mockTable([
+        {
+          id: 'new-1',
+          content: 'New topic',
+          persons: ['Alice', 'Bob'],
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+
+      const { items, create } = useTopics()
+      await create({ content: 'New topic', persons: ['Alice', 'Bob'] })
+
+      expect(mockQueryChain.insert).toHaveBeenCalledWith({
+        content: 'New topic',
+        persons: ['Alice', 'Bob'],
+      })
+      expect(items.value[0].persons).toEqual(['Alice', 'Bob'])
     })
   })
 

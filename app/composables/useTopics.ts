@@ -30,13 +30,13 @@ export const useTopics = () => {
     await fetchList()
   }
 
-  async function create(payload: { content: string; date?: string }) {
+  async function create(payload: { content: string; date?: string; persons?: string[] }) {
     await withLoading(loading, error, async () => {
       const { data, error: insertError } = await useSupabase()
         .from('topics')
         .insert({
           content: payload.content,
-          persons: [],
+          persons: payload.persons ?? [],
           ...(payload.date ? { created_at: payload.date } : {}),
         })
         .select()
@@ -73,11 +73,14 @@ export const useTopics = () => {
     })
   }
 
-  async function update(id: string, payload: { content: string }) {
+  async function update(id: string, payload: { content: string; persons?: string[] }) {
     await withLoading(loading, error, async () => {
       const { data, error: updateError } = await useSupabase()
         .from('topics')
-        .update(payload)
+        .update({
+          content: payload.content,
+          ...(payload.persons ? { persons: payload.persons } : {}),
+        })
         .eq('id', id)
         .select()
       if (updateError) {

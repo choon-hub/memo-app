@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAsyncData } from '#app'
 import { useDailyNew } from '~/composables/useDailyNew'
+import AppErrorAlert from '~/components/AppErrorAlert.vue'
 import DailyNewForm from '~/components/DailyNewForm.vue'
 import DailyNewList from '~/components/DailyNewList.vue'
 import SkeletonList from '~/components/SkeletonList.vue'
@@ -26,7 +27,7 @@ async function handleRemove(id: string) {
 <template>
   <div class="page">
     <h1 class="sr-only">1日1新</h1>
-    <div v-if="error" class="error">{{ error }}</div>
+    <AppErrorAlert v-if="error" :message="error" @retry="fetchList()" />
     <DailyNewForm :loading="loading" @submit="handleSubmit" />
     <SkeletonList v-if="loading && items.length === 0" />
     <DailyNewList
