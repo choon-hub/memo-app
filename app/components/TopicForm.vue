@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import PersonTagInput from './PersonTagInput.vue'
 
 const props = defineProps<{
   loading?: boolean
 }>()
 
 const emit = defineEmits<{
-  submit: [payload: { content: string; date: string }]
+  submit: [payload: { content: string; date: string; persons: string[] }]
 }>()
 
 const content = ref('')
 const date = ref('')
+const persons = ref<string[]>([])
 
 onMounted(() => {
   date.value = new Date().toLocaleDateString('en-CA')
@@ -20,9 +22,10 @@ const isDisabled = computed(() => !content.value.trim() || !date.value || props.
 
 function handleSubmit() {
   if (isDisabled.value) return
-  emit('submit', { content: content.value.trim(), date: date.value })
+  emit('submit', { content: content.value.trim(), date: date.value, persons: persons.value })
   content.value = ''
   date.value = new Date().toLocaleDateString('en-CA')
+  persons.value = []
 }
 </script>
 
@@ -44,6 +47,10 @@ function handleSubmit() {
         <input id="topic-date" v-model="date" type="date" class="input date-input" />
         <CalendarIcon />
       </div>
+    </div>
+    <div class="field">
+      <label class="label">人物</label>
+      <PersonTagInput v-model="persons" />
     </div>
     <button type="submit" class="submit-btn" :disabled="isDisabled">追加する</button>
   </form>

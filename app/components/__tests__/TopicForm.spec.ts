@@ -35,7 +35,7 @@ describe('TopicForm', () => {
     await wrapper.find('form').trigger('submit')
     const emitted = wrapper.emitted('submit')
     expect(emitted).toHaveLength(1)
-    expect(emitted![0][0]).toEqual({ content: '今日あったこと', date: '2024-01-15' })
+    expect(emitted![0][0]).toEqual({ content: '今日あったこと', date: '2024-01-15', persons: [] })
   })
 
   it('emits submit event preserving internal line breaks in content', async () => {
@@ -45,18 +45,46 @@ describe('TopicForm', () => {
     await wrapper.find('form').trigger('submit')
     const emitted = wrapper.emitted('submit')
     expect(emitted).toHaveLength(1)
-    expect(emitted![0][0]).toEqual({ content: '1行目\n2行目', date: '2024-01-15' })
+    expect(emitted![0][0]).toEqual({ content: '1行目\n2行目', date: '2024-01-15', persons: [] })
+  })
+
+  it('emits submit event with persons when person tags are added', async () => {
+    const wrapper = mount(TopicForm)
+    await wrapper.find('textarea').setValue('今日あったこと')
+    await wrapper.find('input[type="date"]').setValue('2024-01-15')
+    await wrapper.find('.tag-text-input').setValue('田中')
+    await wrapper.find('.tag-text-input').trigger('keydown.enter')
+    await wrapper.find('form').trigger('submit')
+    const emitted = wrapper.emitted('submit')
+    expect(emitted).toHaveLength(1)
+    expect(emitted![0][0]).toEqual({
+      content: '今日あったこと',
+      date: '2024-01-15',
+      persons: ['田中'],
+    })
+  })
+
+  it('allows submission without any persons entered', async () => {
+    const wrapper = mount(TopicForm)
+    await wrapper.find('textarea').setValue('今日あったこと')
+    await wrapper.find('input[type="date"]').setValue('2024-01-15')
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined()
+    await wrapper.find('form').trigger('submit')
+    expect(wrapper.emitted('submit')).toHaveLength(1)
   })
 
   it('clears fields after submit', async () => {
     const wrapper = mount(TopicForm)
     await wrapper.find('textarea').setValue('今日あったこと')
     await wrapper.find('input[type="date"]').setValue('2024-01-15')
+    await wrapper.find('.tag-text-input').setValue('田中')
+    await wrapper.find('.tag-text-input').trigger('keydown.enter')
     await wrapper.find('form').trigger('submit')
     expect((wrapper.find('textarea').element as HTMLTextAreaElement).value).toBe('')
     expect((wrapper.find('input[type="date"]').element as HTMLInputElement).value).toBe(
       new Date().toLocaleDateString('en-CA'),
     )
+    expect(wrapper.findAll('.tag')).toHaveLength(0)
   })
 
   it('disables submit button when loading prop is true even if all fields are filled', async () => {

@@ -11,7 +11,7 @@ const { items, loading, error, sortOrder, fetchList, create, update, remove, tog
 
 await useAsyncData('topics', fetchList)
 
-async function handleSubmit(payload: { content: string; date: string }) {
+async function handleSubmit(payload: { content: string; date: string; persons: string[] }) {
   await create({ ...payload, date: `${payload.date}T00:00:00.000Z` })
 }
 
