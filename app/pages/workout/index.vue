@@ -2,6 +2,7 @@
 import { useAsyncData } from '#app'
 import { ref } from 'vue'
 import { useWorkout } from '~/composables/useWorkout'
+import AppErrorAlert from '~/components/AppErrorAlert.vue'
 import WorkoutCategoryTabs from '~/components/WorkoutCategoryTabs.vue'
 import WorkoutForm from '~/components/WorkoutForm.vue'
 import WorkoutList from '~/components/WorkoutList.vue'
@@ -63,7 +64,7 @@ function handleCopy(record: WorkoutRecord) {
       :model-value="selectedCategory"
       @update:model-value="handleCategoryChange"
     />
-    <div v-if="error" class="error">{{ error }}</div>
+    <AppErrorAlert v-if="error" :message="error" @retry="fetchList(selectedCategory)" />
     <WorkoutForm
       :loading="loading"
       :prefill="prefill"
