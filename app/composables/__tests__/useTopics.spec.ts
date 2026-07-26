@@ -373,4 +373,42 @@ describe('useTopics', () => {
       expect(items.value[0].persons).toEqual(['Alice', 'Bob'])
     })
   })
+
+  describe('createMany()', () => {
+    it('inserts an array of payloads in a single call and refetches the list', async () => {
+      mockTable([
+        { id: '1', content: 'Topic 1', persons: [], created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Topic 2', persons: [], created_at: '2024-01-02T00:00:00Z' },
+      ])
+
+      const { items, error, loading, createMany } = useTopics()
+      await createMany([
+        { content: 'Topic 1' },
+        { content: 'Topic 2', date: '2024-01-02T00:00:00Z' },
+      ])
+
+      expect(mockQueryChain.insert).toHaveBeenCalledWith([
+        { content: 'Topic 1', persons: [] },
+        { content: 'Topic 2', persons: [], created_at: '2024-01-02T00:00:00Z' },
+      ])
+      expect(mockQueryChain.select).toHaveBeenCalledWith('*')
+      expect(error.value).toBeNull()
+      expect(loading.value).toBe(false)
+      expect(items.value).toHaveLength(2)
+      expect(items.value[0].id).toBe('2')
+    })
+
+    it('sets error when bulk insert fails without refetching', async () => {
+      mockQueryChain.then.mockImplementation((resolve: (v: unknown) => unknown) =>
+        Promise.resolve(resolve({ data: null, error: { message: 'bulk insert failed' } })),
+      )
+
+      const { items, error, createMany } = useTopics()
+      await createMany([{ content: 'Topic 1' }])
+
+      expect(error.value).toBe('bulk insert failed')
+      expect(items.value).toEqual([])
+      expect(mockSupabaseClient.from).toHaveBeenCalledTimes(1)
+    })
+  })
 })

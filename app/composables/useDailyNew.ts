@@ -53,6 +53,25 @@ export const useDailyNew = () => {
     })
   }
 
+  async function createMany(payloads: { title: string; content: string; date?: string }[]) {
+    await withLoading(loading, error, async () => {
+      const { error: insertError } = await useSupabase()
+        .from('daily_new')
+        .insert(
+          payloads.map((payload) => ({
+            title: payload.title,
+            content: payload.content,
+            ...(payload.date ? { created_at: payload.date } : {}),
+          })),
+        )
+      if (insertError) {
+        error.value = insertError.message
+        return
+      }
+      await fetchList()
+    })
+  }
+
   async function update(id: string, payload: { title: string; content: string }) {
     await withLoading(loading, error, async () => {
       const { data, error: updateError } = await useSupabase()
@@ -88,5 +107,16 @@ export const useDailyNew = () => {
     })
   }
 
-  return { items, loading, error, sortOrder, fetchList, toggleSortOrder, create, update, remove }
+  return {
+    items,
+    loading,
+    error,
+    sortOrder,
+    fetchList,
+    toggleSortOrder,
+    create,
+    createMany,
+    update,
+    remove,
+  }
 }

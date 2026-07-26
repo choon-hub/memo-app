@@ -87,6 +87,36 @@ export const useWorkout = () => {
     })
   }
 
+  async function createMany(
+    payloads: {
+      category: WorkoutCategory
+      menu: string
+      intensity: number
+      reps: number
+      date?: string
+    }[],
+  ) {
+    await withLoading(loading, error, async () => {
+      const { error: insertError } = await useSupabase()
+        .from('workout_records')
+        .insert(
+          payloads.map((payload) => ({
+            category: payload.category,
+            menu: payload.menu,
+            intensity: payload.intensity,
+            reps: payload.reps,
+            ...(payload.date ? { created_at: payload.date } : {}),
+          })),
+        )
+      if (insertError) {
+        error.value = insertError.message
+        return
+      }
+      await fetchList(lastCategory.value)
+      await fetchMenuRecords()
+    })
+  }
+
   const menuSuggestions = computed(() =>
     [...new Set(menuRecords.value.map((r) => r.menu))].sort((a, b) => a.localeCompare(b)),
   )
@@ -113,5 +143,6 @@ export const useWorkout = () => {
     fetchMenuRecords,
     toggleSortOrder,
     create,
+    createMany,
   }
 }
