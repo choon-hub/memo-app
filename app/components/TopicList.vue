@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import type { Topic } from '#shared/types/domain'
 import { formatDate } from '~/utils/date'
 import AppSpinner from '~/components/AppSpinner.vue'
+import PersonTagInput from '~/components/PersonTagInput.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -17,28 +18,32 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   toggleSort: []
-  update: [id: string, content: string]
+  update: [id: string, content: string, persons: string[]]
   remove: [id: string]
 }>()
 
 const editingId = ref<string | null>(null)
 const editContent = ref('')
+const editPersons = ref<string[]>([])
 
 function startEdit(item: Topic) {
   editingId.value = item.id
   editContent.value = item.content
+  editPersons.value = [...item.persons]
 }
 
 function cancelEdit() {
   editingId.value = null
   editContent.value = ''
+  editPersons.value = []
 }
 
 function saveEdit() {
   if (!editContent.value.trim() || !editingId.value) return
-  emit('update', editingId.value, editContent.value.trim())
+  emit('update', editingId.value, editContent.value.trim(), editPersons.value)
   editingId.value = null
   editContent.value = ''
+  editPersons.value = []
 }
 </script>
 
@@ -73,6 +78,7 @@ function saveEdit() {
       <div v-for="item in items" :key="item.id" class="card">
         <template v-if="editingId === item.id">
           <textarea v-model="editContent" class="edit-textarea" :disabled="props.loading" />
+          <PersonTagInput v-model="editPersons" />
           <div class="edit-actions">
             <button
               type="button"
@@ -89,6 +95,11 @@ function saveEdit() {
         </template>
         <template v-else>
           <p class="card-content">{{ item.content }}</p>
+          <ul v-if="item.persons.length > 0" class="person-tags">
+            <li v-for="person in item.persons" :key="person" class="person-tag">
+              {{ person }}
+            </li>
+          </ul>
           <div class="card-footer">
             <span class="card-date">{{ formatDate(item.created_at) }}</span>
             <div class="card-actions">
@@ -202,6 +213,24 @@ function saveEdit() {
   margin: 0 0 6px;
   line-height: 1.6;
   white-space: pre-wrap;
+}
+
+.person-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+}
+
+.person-tag {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4754f0;
+  background: rgba(71, 84, 240, 0.1);
+  border-radius: 10px;
+  padding: 4px 10px;
 }
 
 .card-footer {

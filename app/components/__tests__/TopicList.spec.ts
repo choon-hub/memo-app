@@ -53,4 +53,58 @@ describe('TopicList', () => {
     await wrapper.findAll('.delete-btn')[0].trigger('click')
     expect(wrapper.emitted('remove')).toEqual([['1']])
   })
+
+  it('does not show person tags when persons is empty', () => {
+    const wrapper = mount(TopicList, { props: { items: mockItems } })
+    expect(wrapper.find('.person-tags').exists()).toBe(false)
+  })
+
+  it('shows persons as tags when persons is non-empty', () => {
+    const itemsWithPersons: Topic[] = [
+      {
+        id: '1',
+        content: 'トピック1',
+        persons: ['田中', '鈴木'],
+        created_at: '2024-01-02T00:00:00Z',
+      },
+    ]
+    const wrapper = mount(TopicList, { props: { items: itemsWithPersons } })
+    const tags = wrapper.findAll('.person-tag')
+    expect(tags).toHaveLength(2)
+    expect(tags[0].text()).toBe('田中')
+    expect(tags[1].text()).toBe('鈴木')
+  })
+
+  it('populates PersonTagInput with the item persons when editing starts', async () => {
+    const itemsWithPersons: Topic[] = [
+      { id: '1', content: 'トピック1', persons: ['田中'], created_at: '2024-01-02T00:00:00Z' },
+    ]
+    const wrapper = mount(TopicList, { props: { items: itemsWithPersons } })
+    await wrapper.find('.edit-btn').trigger('click')
+    expect(wrapper.find('.person-tag-input .tag').text()).toContain('田中')
+  })
+
+  it('emits update with edited content and persons when save is clicked', async () => {
+    const itemsWithPersons: Topic[] = [
+      { id: '1', content: 'トピック1', persons: ['田中'], created_at: '2024-01-02T00:00:00Z' },
+    ]
+    const wrapper = mount(TopicList, { props: { items: itemsWithPersons } })
+    await wrapper.find('.edit-btn').trigger('click')
+    await wrapper.find('.tag-text-input').setValue('鈴木')
+    await wrapper.find('.tag-text-input').trigger('keydown.enter')
+    await wrapper.find('.edit-textarea').setValue('更新後の内容')
+    await wrapper.find('.save-btn').trigger('click')
+    expect(wrapper.emitted('update')).toEqual([['1', '更新後の内容', ['田中', '鈴木']]])
+  })
+
+  it('resets edit persons when cancel is clicked', async () => {
+    const itemsWithPersons: Topic[] = [
+      { id: '1', content: 'トピック1', persons: ['田中'], created_at: '2024-01-02T00:00:00Z' },
+    ]
+    const wrapper = mount(TopicList, { props: { items: itemsWithPersons } })
+    await wrapper.find('.edit-btn').trigger('click')
+    await wrapper.find('.cancel-btn').trigger('click')
+    await wrapper.find('.edit-btn').trigger('click')
+    expect(wrapper.find('.person-tag-input .tag').text()).toContain('田中')
+  })
 })

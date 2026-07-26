@@ -11,7 +11,7 @@ vi.mock('#app/composables/asyncData', async () => {
 const mockFetchList = vi.fn()
 const mockCreate = vi.fn()
 const mockUpdate = vi.fn()
-const mockItems = ref<{ id: string; content: string; created_at: string }[]>([])
+const mockItems = ref<{ id: string; content: string; persons: string[]; created_at: string }[]>([])
 const mockLoading = ref(false)
 const mockError = ref<string | null>(null)
 
@@ -63,7 +63,9 @@ describe('topics page', () => {
   })
 
   it('renders TopicList with items from composable', async () => {
-    mockItems.value = [{ id: '1', content: 'トピック', created_at: '2024-01-01T00:00:00Z' }]
+    mockItems.value = [
+      { id: '1', content: 'トピック', persons: [], created_at: '2024-01-01T00:00:00Z' },
+    ]
     const wrapper = await mountPage()
     expect(wrapper.text()).toContain('トピック')
   })
@@ -77,7 +79,9 @@ describe('topics page', () => {
 
   it('keeps TopicList mounted while loading with existing items', async () => {
     mockLoading.value = true
-    mockItems.value = [{ id: '1', content: 'トピック', created_at: '2024-01-01T00:00:00Z' }]
+    mockItems.value = [
+      { id: '1', content: 'トピック', persons: [], created_at: '2024-01-01T00:00:00Z' },
+    ]
     const wrapper = await mountPage()
     expect(wrapper.findComponent({ name: 'SkeletonList' }).exists()).toBe(false)
     expect(wrapper.findComponent({ name: 'TopicList' }).exists()).toBe(true)
@@ -97,5 +101,15 @@ describe('topics page', () => {
       content: '今日あったこと',
       date: '2024-01-15T00:00:00.000Z',
     })
+  })
+
+  it('calls update with content and persons when TopicList emits update', async () => {
+    mockItems.value = [
+      { id: '1', content: 'トピック', persons: [], created_at: '2024-01-01T00:00:00Z' },
+    ]
+    const wrapper = await mountPage()
+    const topicList = wrapper.findComponent({ name: 'TopicList' })
+    await topicList.vm.$emit('update', '1', '更新後の内容', ['田中'])
+    expect(mockUpdate).toHaveBeenCalledWith('1', { content: '更新後の内容', persons: ['田中'] })
   })
 })
