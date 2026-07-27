@@ -258,10 +258,7 @@ function confirmDelete() {
   color: #4a4a68;
   margin: 0 0 5px;
   line-height: 1.5;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: pre-wrap;
 }
 
 .card-footer {

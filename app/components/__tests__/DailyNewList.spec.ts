@@ -42,6 +42,19 @@ describe('DailyNewList', () => {
     expect(wrapper.text()).toContain('Content 2')
   })
 
+  it('renders content with line breaks in full, without truncation', () => {
+    const multilineItems: DailyNew[] = [
+      {
+        id: '3',
+        title: 'Multiline',
+        content: '1行目\n2行目\n3行目',
+        created_at: '2024-01-03T00:00:00Z',
+      },
+    ]
+    const wrapper = mount(DailyNewList, { props: { items: multilineItems } })
+    expect(wrapper.find('.card-content').text()).toBe('1行目\n2行目\n3行目')
+  })
+
   it('switches to edit mode with prefilled values when edit button is clicked', async () => {
     const wrapper = mount(DailyNewList, { props: { items: mockItems } })
     await wrapper.findAll('.edit-btn')[0].trigger('click')
