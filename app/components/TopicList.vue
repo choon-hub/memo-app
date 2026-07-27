@@ -10,9 +10,11 @@ const props = withDefaults(
     items: Topic[]
     sortOrder: 'asc' | 'desc'
     loading?: boolean
+    activePerson?: string | null
   }>(),
   {
     loading: false,
+    activePerson: null,
   },
 )
 
@@ -20,6 +22,7 @@ const emit = defineEmits<{
   toggleSort: []
   update: [id: string, content: string, persons: string[]]
   remove: [id: string]
+  filterPerson: [person: string]
 }>()
 
 const editingId = ref<string | null>(null)
@@ -96,7 +99,13 @@ function saveEdit() {
         <template v-else>
           <p class="card-content">{{ item.content }}</p>
           <ul v-if="item.persons.length > 0" class="person-tags">
-            <li v-for="person in item.persons" :key="person" class="person-tag">
+            <li
+              v-for="person in item.persons"
+              :key="person"
+              class="person-tag"
+              :class="{ active: person === activePerson }"
+              @click="emit('filterPerson', person)"
+            >
               {{ person }}
             </li>
           </ul>
@@ -231,6 +240,17 @@ function saveEdit() {
   background: rgba(71, 84, 240, 0.1);
   border-radius: 10px;
   padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.person-tag:hover {
+  background: rgba(71, 84, 240, 0.2);
+}
+
+.person-tag.active {
+  background: #4754f0;
+  color: white;
 }
 
 .card-footer {

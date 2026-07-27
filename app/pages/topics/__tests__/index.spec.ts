@@ -112,4 +112,60 @@ describe('topics page', () => {
     await topicList.vm.$emit('update', '1', '更新後の内容', ['田中'])
     expect(mockUpdate).toHaveBeenCalledWith('1', { content: '更新後の内容', persons: ['田中'] })
   })
+
+  it('narrows TopicList items to the selected person when TopicList emits filterPerson', async () => {
+    mockItems.value = [
+      { id: '1', content: 'トピック1', persons: ['田中'], created_at: '2024-01-02T00:00:00Z' },
+      { id: '2', content: 'トピック2', persons: ['鈴木'], created_at: '2024-01-01T00:00:00Z' },
+    ]
+    const wrapper = await mountPage()
+    const topicList = wrapper.findComponent({ name: 'TopicList' })
+    await topicList.vm.$emit('filter-person', '田中')
+    const filtered = wrapper.findComponent({ name: 'TopicList' }).props('items')
+    expect(filtered).toEqual([mockItems.value[0]])
+  })
+
+  it('shows a filter indicator with the selected person name', async () => {
+    mockItems.value = [
+      { id: '1', content: 'トピック1', persons: ['田中'], created_at: '2024-01-02T00:00:00Z' },
+    ]
+    const wrapper = await mountPage()
+    const topicList = wrapper.findComponent({ name: 'TopicList' })
+    await topicList.vm.$emit('filter-person', '田中')
+    expect(wrapper.find('.filter-indicator').text()).toContain('田中')
+  })
+
+  it('does not show a filter indicator when no person is selected', async () => {
+    mockItems.value = [
+      { id: '1', content: 'トピック1', persons: ['田中'], created_at: '2024-01-02T00:00:00Z' },
+    ]
+    const wrapper = await mountPage()
+    expect(wrapper.find('.filter-indicator').exists()).toBe(false)
+  })
+
+  it('clears the filter when TopicList emits filterPerson with the same person again', async () => {
+    mockItems.value = [
+      { id: '1', content: 'トピック1', persons: ['田中'], created_at: '2024-01-02T00:00:00Z' },
+      { id: '2', content: 'トピック2', persons: ['鈴木'], created_at: '2024-01-01T00:00:00Z' },
+    ]
+    const wrapper = await mountPage()
+    const topicList = wrapper.findComponent({ name: 'TopicList' })
+    await topicList.vm.$emit('filter-person', '田中')
+    await topicList.vm.$emit('filter-person', '田中')
+    expect(wrapper.find('.filter-indicator').exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'TopicList' }).props('items')).toEqual(mockItems.value)
+  })
+
+  it('clears the filter when the clear button is clicked', async () => {
+    mockItems.value = [
+      { id: '1', content: 'トピック1', persons: ['田中'], created_at: '2024-01-02T00:00:00Z' },
+      { id: '2', content: 'トピック2', persons: ['鈴木'], created_at: '2024-01-01T00:00:00Z' },
+    ]
+    const wrapper = await mountPage()
+    const topicList = wrapper.findComponent({ name: 'TopicList' })
+    await topicList.vm.$emit('filter-person', '田中')
+    await wrapper.find('.filter-clear-btn').trigger('click')
+    expect(wrapper.find('.filter-indicator').exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'TopicList' }).props('items')).toEqual(mockItems.value)
+  })
 })

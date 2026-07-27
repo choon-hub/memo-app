@@ -75,6 +75,38 @@ describe('TopicList', () => {
     expect(tags[1].text()).toBe('鈴木')
   })
 
+  it('emits filterPerson with the clicked person name', async () => {
+    const itemsWithPersons: Topic[] = [
+      {
+        id: '1',
+        content: 'トピック1',
+        persons: ['田中', '鈴木'],
+        created_at: '2024-01-02T00:00:00Z',
+      },
+    ]
+    const wrapper = mount(TopicList, { props: { items: itemsWithPersons } })
+    const tags = wrapper.findAll('.person-tag')
+    await tags[1].trigger('click')
+    expect(wrapper.emitted('filterPerson')).toEqual([['鈴木']])
+  })
+
+  it('adds the active class to the tag matching activePerson', () => {
+    const itemsWithPersons: Topic[] = [
+      {
+        id: '1',
+        content: 'トピック1',
+        persons: ['田中', '鈴木'],
+        created_at: '2024-01-02T00:00:00Z',
+      },
+    ]
+    const wrapper = mount(TopicList, {
+      props: { items: itemsWithPersons, activePerson: '田中' },
+    })
+    const tags = wrapper.findAll('.person-tag')
+    expect(tags[0].classes()).toContain('active')
+    expect(tags[1].classes()).not.toContain('active')
+  })
+
   it('populates PersonTagInput with the item persons when editing starts', async () => {
     const itemsWithPersons: Topic[] = [
       { id: '1', content: 'トピック1', persons: ['田中'], created_at: '2024-01-02T00:00:00Z' },
