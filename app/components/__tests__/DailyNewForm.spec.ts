@@ -49,6 +49,21 @@ describe('DailyNewForm', () => {
     expect(emitted![0][0]).toEqual({ title: 'タイトル', content: '内容です', date: '2024-01-15' })
   })
 
+  it('preserves line breaks within content when submitting', async () => {
+    const wrapper = mount(DailyNewForm)
+    await wrapper.find('input[type="text"]').setValue('タイトル')
+    await wrapper.find('textarea').setValue('1行目\n2行目\n3行目')
+    await wrapper.find('input[type="date"]').setValue('2024-01-15')
+    await wrapper.find('form').trigger('submit')
+    const emitted = wrapper.emitted('submit')
+    expect(emitted).toHaveLength(1)
+    expect(emitted![0][0]).toEqual({
+      title: 'タイトル',
+      content: '1行目\n2行目\n3行目',
+      date: '2024-01-15',
+    })
+  })
+
   it('clears fields after submit', async () => {
     const wrapper = mount(DailyNewForm)
     await wrapper.find('input[type="text"]').setValue('タイトル')
