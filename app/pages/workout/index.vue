@@ -19,6 +19,7 @@ const {
   fetchList,
   fetchMenuRecords,
   create,
+  update,
   toggleSortOrder,
 } = useWorkout()
 const selectedCategory = ref<WorkoutCategory>('chest')
@@ -51,6 +52,13 @@ async function handleSubmit(payload: {
   })
 }
 
+async function handleUpdate(
+  id: string,
+  payload: { menu: string; intensity: number; reps: number; date: string },
+) {
+  await update(id, { ...payload, date: `${payload.date}T00:00:00.000Z` })
+}
+
 function handleCopy(record: WorkoutRecord) {
   selectedCategory.value = record.category
   prefill.value = { ...record }
@@ -80,6 +88,7 @@ function handleCopy(record: WorkoutRecord) {
       :loading="loading"
       @toggle-sort="toggleSortOrder"
       @copy="handleCopy"
+      @update="handleUpdate"
     />
   </div>
 </template>

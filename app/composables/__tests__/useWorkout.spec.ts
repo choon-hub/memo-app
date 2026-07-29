@@ -592,6 +592,216 @@ describe('useWorkout', () => {
     })
   })
 
+  describe('update()', () => {
+    it('applies the returned row to items without refetching the list', async () => {
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+
+      const { items, loading, error, fetchList, update } = useWorkout()
+      await fetchList()
+
+      mockQueryChain.select.mockClear()
+      vi.mocked(mockSupabaseClient.from).mockClear()
+
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 70,
+          reps: 12,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+      await update('1', { menu: 'ベンチプレス', intensity: 70, reps: 12 })
+
+      expect(mockQueryChain.update).toHaveBeenCalledWith({
+        menu: 'ベンチプレス',
+        intensity: 70,
+        reps: 12,
+      })
+      expect(mockQueryChain.eq).toHaveBeenCalledWith('id', '1')
+      expect(mockSupabaseClient.from).toHaveBeenCalledTimes(1)
+      expect(mockQueryChain.select).not.toHaveBeenCalledWith('*')
+      expect(error.value).toBeNull()
+      expect(loading.value).toBe(false)
+      expect(items.value).toEqual([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 70,
+          reps: 12,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+    })
+
+    it('preserves sort order (desc) after update', async () => {
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          category: 'chest',
+          menu: 'ダンベルフライ',
+          intensity: 20,
+          reps: 12,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      ])
+
+      const { items, fetchList, update } = useWorkout()
+      await fetchList()
+
+      mockTable([
+        {
+          id: '2',
+          category: 'chest',
+          menu: 'ダンベルフライ',
+          intensity: 25,
+          reps: 12,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      ])
+      await update('2', { menu: 'ダンベルフライ', intensity: 25, reps: 12 })
+
+      expect(items.value.map((item) => item.id)).toEqual(['2', '1'])
+      expect(items.value[0].intensity).toBe(25)
+    })
+
+    it('sends created_at when a date is provided and re-sorts accordingly', async () => {
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          category: 'chest',
+          menu: 'ダンベルフライ',
+          intensity: 20,
+          reps: 12,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      ])
+
+      const { items, fetchList, update } = useWorkout()
+      await fetchList()
+
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-10T00:00:00Z',
+        },
+      ])
+      await update('1', {
+        menu: 'ベンチプレス',
+        intensity: 60,
+        reps: 10,
+        date: '2024-01-10T00:00:00Z',
+      })
+
+      expect(mockQueryChain.update).toHaveBeenCalledWith({
+        menu: 'ベンチプレス',
+        intensity: 60,
+        reps: 10,
+        created_at: '2024-01-10T00:00:00Z',
+      })
+      expect(items.value.map((item) => item.id)).toEqual(['1', '2'])
+    })
+
+    it('keeps menuSuggestions and getMenuCandidates in sync after a menu name edit', async () => {
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+
+      const { items, menuSuggestions, fetchList, fetchMenuRecords, update } = useWorkout()
+      await fetchList()
+      await fetchMenuRecords()
+
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'インクラインプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+      await update('1', { menu: 'インクラインプレス', intensity: 60, reps: 10 })
+
+      expect(items.value[0].menu).toBe('インクラインプレス')
+      expect(menuSuggestions.value).toContain('インクラインプレス')
+      expect(menuSuggestions.value).not.toContain('ベンチプレス')
+    })
+
+    it('refetches the list and menu records as rollback when no row is returned', async () => {
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+
+      const { fetchList, update } = useWorkout()
+      await fetchList()
+
+      mockQueryChain.select.mockClear()
+
+      mockTable([])
+      await update('1', { menu: 'ベンチプレス', intensity: 60, reps: 10 })
+
+      expect(mockQueryChain.select).toHaveBeenCalledWith('*')
+      expect(mockQueryChain.select).toHaveBeenCalledWith('menu, category')
+    })
+
+    it('sets error when update fails', async () => {
+      mockQueryChain.then.mockImplementation((resolve: (v: unknown) => unknown) =>
+        Promise.resolve(resolve({ data: null, error: { message: 'update failed' } })),
+      )
+
+      const { error, update } = useWorkout()
+      await update('1', { menu: 'ベンチプレス', intensity: 60, reps: 10 })
+
+      expect(error.value).toBe('update failed')
+    })
+  })
+
   describe('createMany()', () => {
     it('inserts an array of payloads in a single call and refetches the list and menu records', async () => {
       mockTable([
