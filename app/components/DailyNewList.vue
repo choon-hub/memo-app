@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { DailyNew } from '#shared/types/domain'
-import { formatDate } from '~/utils/date'
+import { formatDate, toDateInputValue } from '~/utils/date'
 import AppSpinner from '~/components/AppSpinner.vue'
 
 const props = withDefaults(
@@ -17,19 +17,21 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   toggleSort: []
-  update: [id: string, title: string, content: string]
+  update: [id: string, title: string, content: string, date: string]
   remove: [id: string]
 }>()
 
 const editingId = ref<string | null>(null)
 const editTitle = ref('')
 const editContent = ref('')
+const editDate = ref('')
 const confirmingId = ref<string | null>(null)
 
 function startEdit(item: DailyNew) {
   editingId.value = item.id
   editTitle.value = item.title
   editContent.value = item.content
+  editDate.value = toDateInputValue(item.created_at)
   confirmingId.value = null
 }
 
@@ -37,14 +39,17 @@ function cancelEdit() {
   editingId.value = null
   editTitle.value = ''
   editContent.value = ''
+  editDate.value = ''
 }
 
 function saveEdit() {
-  if (!editTitle.value.trim() || !editContent.value.trim() || !editingId.value) return
-  emit('update', editingId.value, editTitle.value.trim(), editContent.value.trim())
+  if (!editTitle.value.trim() || !editContent.value.trim() || !editDate.value || !editingId.value)
+    return
+  emit('update', editingId.value, editTitle.value.trim(), editContent.value.trim(), editDate.value)
   editingId.value = null
   editTitle.value = ''
   editContent.value = ''
+  editDate.value = ''
 }
 
 function startDelete(item: DailyNew) {
@@ -105,6 +110,7 @@ function confirmDelete() {
             rows="3"
             :disabled="props.loading"
           />
+          <input v-model="editDate" class="edit-date-input" type="date" :disabled="props.loading" />
           <div class="card-actions">
             <button type="button" class="save-btn" :disabled="props.loading" @click="saveEdit">
               保存
@@ -402,8 +408,21 @@ function confirmDelete() {
   line-height: 1.5;
 }
 
+.edit-date-input {
+  font-size: 13px;
+  color: #4a4a68;
+  border: 1px solid rgba(71, 84, 240, 0.3);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
+
 .edit-input:disabled,
-.edit-textarea:disabled {
+.edit-textarea:disabled,
+.edit-date-input:disabled {
   opacity: 0.6;
 }
 </style>
