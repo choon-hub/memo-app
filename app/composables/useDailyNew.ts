@@ -72,7 +72,10 @@ export const useDailyNew = () => {
     })
   }
 
-  async function update(id: string, payload: { title: string; content: string }) {
+  async function update(
+    id: string,
+    payload: { title: string; content: string; created_at?: string },
+  ) {
     await withLoading(loading, error, async () => {
       const { data, error: updateError } = await useSupabase()
         .from('daily_new')
