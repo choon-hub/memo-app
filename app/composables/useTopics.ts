@@ -73,13 +73,17 @@ export const useTopics = () => {
     })
   }
 
-  async function update(id: string, payload: { content: string; persons?: string[] }) {
+  async function update(
+    id: string,
+    payload: { content: string; persons?: string[]; created_at?: string },
+  ) {
     await withLoading(loading, error, async () => {
       const { data, error: updateError } = await useSupabase()
         .from('topics')
         .update({
           content: payload.content,
           ...(payload.persons ? { persons: payload.persons } : {}),
+          ...(payload.created_at ? { created_at: payload.created_at } : {}),
         })
         .eq('id', id)
         .select()

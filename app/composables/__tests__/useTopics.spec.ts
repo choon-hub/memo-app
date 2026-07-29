@@ -197,6 +197,54 @@ describe('useTopics', () => {
         },
       ])
     })
+
+    it('includes created_at in the update payload when provided', async () => {
+      mockTable([{ id: '1', content: 'Original', persons: [], created_at: '2024-01-01T00:00:00Z' }])
+
+      const { items, fetchList, update } = useTopics()
+      await fetchList()
+
+      mockTable([
+        {
+          id: '1',
+          content: 'Updated',
+          persons: [],
+          created_at: '2024-03-15T00:00:00.000Z',
+        },
+      ])
+      await update('1', { content: 'Updated', created_at: '2024-03-15T00:00:00.000Z' })
+
+      expect(mockQueryChain.update).toHaveBeenCalledWith({
+        content: 'Updated',
+        created_at: '2024-03-15T00:00:00.000Z',
+      })
+      expect(items.value).toEqual([
+        {
+          id: '1',
+          content: 'Updated',
+          persons: [],
+          created_at: '2024-03-15T00:00:00.000Z',
+        },
+      ])
+    })
+
+    it('re-sorts the list when created_at is changed to a later date', async () => {
+      mockTable([
+        { id: '1', content: 'Older', persons: [], created_at: '2024-01-01T00:00:00Z' },
+        { id: '2', content: 'Newer', persons: [], created_at: '2024-01-02T00:00:00Z' },
+      ])
+
+      const { items, fetchList, update } = useTopics()
+      await fetchList()
+      expect(items.value.map((item) => item.id)).toEqual(['2', '1'])
+
+      mockTable([
+        { id: '1', content: 'Older', persons: [], created_at: '2024-03-15T00:00:00.000Z' },
+      ])
+      await update('1', { content: 'Older', created_at: '2024-03-15T00:00:00.000Z' })
+
+      expect(items.value.map((item) => item.id)).toEqual(['1', '2'])
+    })
   })
 
   describe('remove()', () => {
