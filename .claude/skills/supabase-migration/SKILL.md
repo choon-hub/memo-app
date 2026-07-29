@@ -33,6 +33,12 @@ Creates a new file under `supabase/migrations/` for a schema change in this proj
    ```
    (or `--local` if they run Supabase locally).
 6. **Domain types** — if the schema change affects application-level fields, remind the user to update the corresponding type in `shared/types/domain.ts` (e.g. `WorkoutRecord`, `DailyNew`) to match.
+7. **Completion checklist** — present this checklist to the user after writing the migration file. Applying to production is easy to forget (see #148, where a `persons` column migration was never applied to the production project and caused a runtime schema-cache error):
+   ```
+   - [ ] 開発用 Supabase プロジェクトにマイグレーションを適用した
+   - [ ] 本番プロジェクトにも同じマイグレーションを適用した（適用漏れは実行時エラーの原因になる。例: #148）
+   - [ ] shared/types/database.ts を `supabase gen types` で再生成した
+   ```
 
 ## Non-goals
 

@@ -63,6 +63,11 @@ npm run build    # プロダクションビルド
 スキーマ変更時は新しいマイグレーションファイルを追加し、`shared/types/database.ts` を
 `supabase gen types` で再生成する。
 
+マイグレーションは開発用 Supabase プロジェクトだけでなく、**本番プロジェクトにも適用が必要**。
+適用漏れはランタイムエラーの原因になる（例: #148 — `persons` カラム追加マイグレーション未適用に
+よるトピック追加時のスキーマキャッシュエラー）。本番への適用手順は
+`docs/issues/deploy-02-supabase-production.md` を参照。
+
 ## スキル
 
 グローバルスキル（`~/.claude/skills`）で以下のワークフローを提供している。
