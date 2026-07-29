@@ -20,6 +20,7 @@ const {
   fetchMenuRecords,
   create,
   update,
+  remove,
   toggleSortOrder,
 } = useWorkout()
 const selectedCategory = ref<WorkoutCategory>('chest')
@@ -63,6 +64,10 @@ function handleCopy(record: WorkoutRecord) {
   selectedCategory.value = record.category
   prefill.value = { ...record }
 }
+
+async function handleRemove(id: string) {
+  await remove(id)
+}
 </script>
 
 <template>
@@ -89,6 +94,7 @@ function handleCopy(record: WorkoutRecord) {
       @toggle-sort="toggleSortOrder"
       @copy="handleCopy"
       @update="handleUpdate"
+      @remove="handleRemove"
     />
   </div>
 </template>
