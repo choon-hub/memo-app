@@ -12,6 +12,7 @@ vi.mock('#app/composables/asyncData', async () => {
 const mockFetchList = vi.fn()
 const mockFetchMenuRecords = vi.fn()
 const mockCreate = vi.fn()
+const mockCreateMany = vi.fn()
 const mockToggleSortOrder = vi.fn()
 const mockItems = ref<WorkoutRecord[]>([])
 const mockLoading = ref(false)
@@ -36,6 +37,7 @@ vi.mock('~/composables/useWorkout', () => ({
     fetchList: mockFetchList,
     fetchMenuRecords: mockFetchMenuRecords,
     create: mockCreate,
+    createMany: mockCreateMany,
     toggleSortOrder: mockToggleSortOrder,
   })),
 }))
@@ -173,6 +175,29 @@ describe('workout page', () => {
       reps: 12,
       date: '2024-01-20T00:00:00.000Z',
     })
+  })
+
+  it('calls createMany and refreshes the list when CsvImportSection emits import', async () => {
+    const wrapper = await mountPage()
+    const csvImportSection = wrapper.findComponent({ name: 'CsvImportSection' })
+    await csvImportSection.vm.$emit('import', [
+      {
+        category: 'back',
+        menu: 'デッドリフト',
+        intensity: 100,
+        reps: 5,
+        created_at: '2024-01-15T00:00:00.000Z',
+      },
+    ])
+    expect(mockCreateMany).toHaveBeenCalledWith([
+      {
+        category: 'back',
+        menu: 'デッドリフト',
+        intensity: 100,
+        reps: 5,
+        date: '2024-01-15T00:00:00.000Z',
+      },
+    ])
   })
 
   it('calls toggleSortOrder when the list emits toggle-sort', async () => {

@@ -2,13 +2,30 @@
 import { computed, ref } from 'vue'
 import { useAsyncData } from '#app'
 import { useTopics } from '~/composables/useTopics'
+import { importTopicRows, type TopicCsvPayload } from '~/utils/csvImport'
 import AppErrorAlert from '~/components/AppErrorAlert.vue'
+import CsvImportSection from '~/components/CsvImportSection.vue'
 import TopicForm from '~/components/TopicForm.vue'
 import TopicList from '~/components/TopicList.vue'
 import SkeletonList from '~/components/SkeletonList.vue'
 
-const { items, loading, error, sortOrder, fetchList, create, update, remove, toggleSortOrder } =
-  useTopics()
+const {
+  items,
+  loading,
+  error,
+  sortOrder,
+  fetchList,
+  create,
+  createMany,
+  update,
+  remove,
+  toggleSortOrder,
+} = useTopics()
+
+const csvColumns = [
+  { key: 'content', label: '内容' },
+  { key: 'date', label: '日付' },
+]
 
 await useAsyncData('topics', fetchList)
 
@@ -38,6 +55,15 @@ async function handleUpdate(id: string, content: string, persons: string[]) {
 async function handleRemove(id: string) {
   await remove(id)
 }
+
+async function handleCsvImport(payloads: TopicCsvPayload[]) {
+  await createMany(
+    payloads.map((payload) => ({
+      content: payload.content,
+      date: payload.created_at ?? undefined,
+    })),
+  )
+}
 </script>
 
 <template>
@@ -45,6 +71,12 @@ async function handleRemove(id: string) {
     <h1 class="sr-only">日々のトピック</h1>
     <AppErrorAlert v-if="error" :message="error" @retry="fetchList()" />
     <TopicForm :loading="loading" @submit="handleSubmit" />
+    <CsvImportSection
+      :columns="csvColumns"
+      :validate="importTopicRows"
+      :loading="loading"
+      @import="handleCsvImport"
+    />
     <div v-if="selectedPerson" class="filter-indicator">
       <span class="filter-text">{{ selectedPerson }}で絞り込み中</span>
       <button type="button" class="filter-clear-btn" aria-label="絞り込み解除" @click="clearFilter">
