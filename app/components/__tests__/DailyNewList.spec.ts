@@ -61,10 +61,13 @@ describe('DailyNewList', () => {
 
     const input = wrapper.find('.edit-input')
     const textarea = wrapper.find('.edit-textarea')
+    const dateInput = wrapper.find('.edit-date-input')
     expect(input.exists()).toBe(true)
     expect(textarea.exists()).toBe(true)
+    expect(dateInput.exists()).toBe(true)
     expect((input.element as HTMLInputElement).value).toBe('First')
     expect((textarea.element as HTMLTextAreaElement).value).toBe('Content 1')
+    expect((dateInput.element as HTMLInputElement).value).toBe('2024-01-02')
   })
 
   it('returns to view mode without emitting update when cancel button is clicked', async () => {
@@ -86,8 +89,19 @@ describe('DailyNewList', () => {
     const emitted = wrapper.emitted('update')
     expect(emitted).toBeTruthy()
     expect(emitted).toHaveLength(1)
-    expect(emitted![0]).toEqual(['1', '新しいタイトル', '新しい内容'])
+    expect(emitted![0]).toEqual(['1', '新しいタイトル', '新しい内容', '2024-01-02'])
     expect(wrapper.find('.edit-input').exists()).toBe(false)
+  })
+
+  it('emits update with the changed date when the date input is edited', async () => {
+    const wrapper = mount(DailyNewList, { props: { items: mockItems } })
+    await wrapper.findAll('.edit-btn')[0].trigger('click')
+    await wrapper.find('.edit-date-input').setValue('2024-03-10')
+    await wrapper.find('.save-btn').trigger('click')
+
+    const emitted = wrapper.emitted('update')
+    expect(emitted).toBeTruthy()
+    expect(emitted![0]).toEqual(['1', 'First', 'Content 1', '2024-03-10'])
   })
 
   it('shows inline confirmation without emitting remove on first delete click', async () => {

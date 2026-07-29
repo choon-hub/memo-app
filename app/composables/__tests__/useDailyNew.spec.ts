@@ -148,6 +148,45 @@ describe('useDailyNew', () => {
       expect(items.value[0].content).toBe('Updated content')
     })
 
+    it('passes created_at through to the update payload', async () => {
+      queueResult({
+        data: [
+          {
+            id: '1',
+            title: 'Original title',
+            content: 'Original content',
+            created_at: '2024-01-01T00:00:00Z',
+          },
+        ],
+        error: null,
+      })
+
+      const { update } = useDailyNew()
+
+      queueResult({
+        data: [
+          {
+            id: '1',
+            title: 'Updated title',
+            content: 'Updated content',
+            created_at: '2024-02-01T00:00:00.000Z',
+          },
+        ],
+        error: null,
+      })
+      await update('1', {
+        title: 'Updated title',
+        content: 'Updated content',
+        created_at: '2024-02-01T00:00:00.000Z',
+      })
+
+      expect(mockQueryChain.update).toHaveBeenCalledWith({
+        title: 'Updated title',
+        content: 'Updated content',
+        created_at: '2024-02-01T00:00:00.000Z',
+      })
+    })
+
     it('preserves sort order (desc) after update', async () => {
       queueResult({
         data: [

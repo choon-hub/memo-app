@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { Topic } from '#shared/types/domain'
-import { formatDate } from '~/utils/date'
+import { formatDate, toDateInputValue } from '~/utils/date'
 import AppSpinner from '~/components/AppSpinner.vue'
 import PersonTagInput from '~/components/PersonTagInput.vue'
 
@@ -20,7 +20,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   toggleSort: []
-  update: [id: string, content: string, persons: string[]]
+  update: [id: string, content: string, persons: string[], createdAt: string]
   remove: [id: string]
   filterPerson: [person: string]
 }>()
@@ -28,12 +28,14 @@ const emit = defineEmits<{
 const editingId = ref<string | null>(null)
 const editContent = ref('')
 const editPersons = ref<string[]>([])
+const editDate = ref('')
 const confirmingId = ref<string | null>(null)
 
 function startEdit(item: Topic) {
   editingId.value = item.id
   editContent.value = item.content
   editPersons.value = [...item.persons]
+  editDate.value = toDateInputValue(item.created_at)
   confirmingId.value = null
 }
 
@@ -41,14 +43,22 @@ function cancelEdit() {
   editingId.value = null
   editContent.value = ''
   editPersons.value = []
+  editDate.value = ''
 }
 
 function saveEdit() {
-  if (!editContent.value.trim() || !editingId.value) return
-  emit('update', editingId.value, editContent.value.trim(), editPersons.value)
+  if (!editContent.value.trim() || !editDate.value || !editingId.value) return
+  emit(
+    'update',
+    editingId.value,
+    editContent.value.trim(),
+    editPersons.value,
+    `${editDate.value}T00:00:00.000Z`,
+  )
   editingId.value = null
   editContent.value = ''
   editPersons.value = []
+  editDate.value = ''
 }
 
 function startDelete(item: Topic) {
@@ -97,12 +107,13 @@ function confirmDelete() {
       <div v-for="item in items" :key="item.id" class="card">
         <template v-if="editingId === item.id">
           <textarea v-model="editContent" class="edit-textarea" :disabled="props.loading" />
+          <input v-model="editDate" type="date" class="edit-date-input" :disabled="props.loading" />
           <PersonTagInput v-model="editPersons" />
           <div class="edit-actions">
             <button
               type="button"
               class="save-btn"
-              :disabled="!editContent.trim() || props.loading"
+              :disabled="!editContent.trim() || !editDate || props.loading"
               @click="saveEdit"
             >
               保存
@@ -399,6 +410,27 @@ function confirmDelete() {
 }
 
 .edit-textarea:disabled {
+  opacity: 0.6;
+}
+
+.edit-date-input {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid #ecf1f4;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #4a4a68;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
+
+.edit-date-input:focus {
+  outline: none;
+  border-color: #4754f0;
+}
+
+.edit-date-input:disabled {
   opacity: 0.6;
 }
 

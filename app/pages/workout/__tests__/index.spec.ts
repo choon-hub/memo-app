@@ -13,6 +13,7 @@ const mockFetchList = vi.fn()
 const mockFetchMenuRecords = vi.fn()
 const mockCreate = vi.fn()
 const mockCreateMany = vi.fn()
+const mockUpdate = vi.fn()
 const mockToggleSortOrder = vi.fn()
 const mockItems = ref<WorkoutRecord[]>([])
 const mockLoading = ref(false)
@@ -38,6 +39,7 @@ vi.mock('~/composables/useWorkout', () => ({
     fetchMenuRecords: mockFetchMenuRecords,
     create: mockCreate,
     createMany: mockCreateMany,
+    update: mockUpdate,
     toggleSortOrder: mockToggleSortOrder,
   })),
 }))
@@ -198,6 +200,23 @@ describe('workout page', () => {
         date: '2024-01-15T00:00:00.000Z',
       },
     ])
+  })
+
+  it('calls update with the ISO-converted date when the list emits update', async () => {
+    const wrapper = await mountPage()
+    const list = wrapper.findComponent({ name: 'WorkoutList' })
+    await list.vm.$emit('update', '1', {
+      menu: 'インクラインプレス',
+      intensity: 65,
+      reps: 8,
+      date: '2024-02-01',
+    })
+    expect(mockUpdate).toHaveBeenCalledWith('1', {
+      menu: 'インクラインプレス',
+      intensity: 65,
+      reps: 8,
+      date: '2024-02-01T00:00:00.000Z',
+    })
   })
 
   it('calls toggleSortOrder when the list emits toggle-sort', async () => {

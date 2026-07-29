@@ -22,6 +22,7 @@ const {
   fetchMenuRecords,
   create,
   createMany,
+  update,
   toggleSortOrder,
 } = useWorkout()
 const selectedCategory = ref<WorkoutCategory>('chest')
@@ -60,6 +61,13 @@ async function handleSubmit(payload: {
     reps: payload.reps,
     date: `${payload.date}T00:00:00.000Z`,
   })
+}
+
+async function handleUpdate(
+  id: string,
+  payload: { menu: string; intensity: number; reps: number; date: string },
+) {
+  await update(id, { ...payload, date: `${payload.date}T00:00:00.000Z` })
 }
 
 function handleCopy(record: WorkoutRecord) {
@@ -109,6 +117,7 @@ async function handleCsvImport(payloads: WorkoutRecordCsvPayload[]) {
       :loading="loading"
       @toggle-sort="toggleSortOrder"
       @copy="handleCopy"
+      @update="handleUpdate"
     />
   </div>
 </template>

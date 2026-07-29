@@ -48,8 +48,8 @@ async function handleSubmit(payload: { content: string; date: string; persons: s
   await create({ ...payload, date: `${payload.date}T00:00:00.000Z` })
 }
 
-async function handleUpdate(id: string, content: string, persons: string[]) {
-  await update(id, { content, persons })
+async function handleUpdate(id: string, content: string, persons: string[], createdAt: string) {
+  await update(id, { content, persons, created_at: createdAt })
 }
 
 async function handleRemove(id: string) {

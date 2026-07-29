@@ -43,8 +43,8 @@ async function handleCsvImport(payloads: DailyNewCsvPayload[]) {
   )
 }
 
-async function handleUpdate(id: string, title: string, content: string) {
-  await update(id, { title, content })
+async function handleUpdate(id: string, title: string, content: string, date: string) {
+  await update(id, { title, content, created_at: `${date}T00:00:00.000Z` })
 }
 
 async function handleRemove(id: string) {
