@@ -163,7 +163,7 @@ describe('TopicList', () => {
     expect(wrapper.find('.person-tag-input .tag').text()).toContain('田中')
   })
 
-  it('emits update with edited content and persons when save is clicked', async () => {
+  it('emits update with edited content, persons and created_at when save is clicked', async () => {
     const itemsWithPersons: Topic[] = [
       { id: '1', content: 'トピック1', persons: ['田中'], created_at: '2024-01-02T00:00:00Z' },
     ]
@@ -173,7 +173,31 @@ describe('TopicList', () => {
     await wrapper.find('.tag-text-input').trigger('keydown.enter')
     await wrapper.find('.edit-textarea').setValue('更新後の内容')
     await wrapper.find('.save-btn').trigger('click')
-    expect(wrapper.emitted('update')).toEqual([['1', '更新後の内容', ['田中', '鈴木']]])
+    expect(wrapper.emitted('update')).toEqual([
+      ['1', '更新後の内容', ['田中', '鈴木'], '2024-01-02T00:00:00.000Z'],
+    ])
+  })
+
+  it('populates the date input with the item created_at when editing starts', async () => {
+    const itemsWithPersons: Topic[] = [
+      { id: '1', content: 'トピック1', persons: ['田中'], created_at: '2024-01-02T00:00:00Z' },
+    ]
+    const wrapper = mount(TopicList, { props: { items: itemsWithPersons } })
+    await wrapper.find('.edit-btn').trigger('click')
+    expect((wrapper.find('.edit-date-input').element as HTMLInputElement).value).toBe('2024-01-02')
+  })
+
+  it('emits update with the edited created_at when the date input is changed', async () => {
+    const itemsWithPersons: Topic[] = [
+      { id: '1', content: 'トピック1', persons: ['田中'], created_at: '2024-01-02T00:00:00Z' },
+    ]
+    const wrapper = mount(TopicList, { props: { items: itemsWithPersons } })
+    await wrapper.find('.edit-btn').trigger('click')
+    await wrapper.find('.edit-date-input').setValue('2024-03-15')
+    await wrapper.find('.save-btn').trigger('click')
+    expect(wrapper.emitted('update')).toEqual([
+      ['1', 'トピック1', ['田中'], '2024-03-15T00:00:00.000Z'],
+    ])
   })
 
   it('resets edit persons when cancel is clicked', async () => {
