@@ -117,6 +117,51 @@ export const useWorkout = () => {
     })
   }
 
+  async function update(
+    id: string,
+    payload: { menu: string; intensity: number; reps: number; date?: string },
+  ) {
+    await withLoading(loading, error, async () => {
+      const before = items.value.find((item) => item.id === id)
+      const { data, error: updateError } = await useSupabase()
+        .from('workout_records')
+        .update({
+          menu: payload.menu,
+          intensity: payload.intensity,
+          reps: payload.reps,
+          ...(payload.date ? { created_at: payload.date } : {}),
+        })
+        .eq('id', id)
+        .select()
+      if (updateError) {
+        error.value = updateError.message
+        return
+      }
+      const updated = data?.[0]
+      if (!updated) {
+        // 返却行が得られずローカル状態と DB がずれた可能性があるため再フェッチする
+        await fetchList(lastCategory.value)
+        await fetchMenuRecords()
+        return
+      }
+      items.value = sortByDate(
+        items.value.map((item) => (item.id === updated.id ? updated : item)),
+        sortOrder.value,
+      )
+      if (before) {
+        // menuRecords は id を持たないため、更新前の menu/category の組み合わせで一致するエントリを探す
+        const idx = menuRecords.value.findIndex(
+          (r) => r.menu === before.menu && r.category === before.category,
+        )
+        if (idx !== -1) {
+          menuRecords.value = menuRecords.value.map((r, i) =>
+            i === idx ? { menu: updated.menu, category: updated.category } : r,
+          )
+        }
+      }
+    })
+  }
+
   const menuSuggestions = computed(() =>
     [...new Set(menuRecords.value.map((r) => r.menu))].sort((a, b) => a.localeCompare(b)),
   )
@@ -144,5 +189,6 @@ export const useWorkout = () => {
     toggleSortOrder,
     create,
     createMany,
+    update,
   }
 }
