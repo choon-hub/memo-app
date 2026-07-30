@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { defineComponent, h, Suspense, ref } from 'vue'
 import TopicsPage from '../index.vue'
+import { useAsyncData } from '#app/composables/asyncData'
 
 vi.mock('#app/composables/asyncData', async () => {
   const { createAsyncDataMock } = await import('../../../../test/helpers/nuxt')
@@ -70,6 +71,23 @@ describe('topics page', () => {
     ]
     const wrapper = await mountPage()
     expect(wrapper.text()).toContain('トピック')
+  })
+
+  it('renders items restored from payload when useAsyncData does not re-invoke fetchList', async () => {
+    const payloadItems = [
+      { id: '1', content: 'Payload topic', persons: [], created_at: '2024-01-01T00:00:00Z' },
+    ]
+    vi.mocked(useAsyncData).mockResolvedValueOnce({
+      data: ref(payloadItems),
+      pending: ref(false),
+      refresh: vi.fn(),
+      execute: vi.fn(),
+    } as unknown as Awaited<ReturnType<typeof useAsyncData>>)
+
+    const wrapper = await mountPage()
+
+    expect(mockFetchList).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('Payload topic')
   })
 
   it('renders SkeletonList instead of TopicList while loading with no items', async () => {
