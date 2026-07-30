@@ -10,6 +10,7 @@ vi.mock('#app/composables/asyncData', async () => {
 
 const mockFetchList = vi.fn()
 const mockCreate = vi.fn()
+const mockCreateMany = vi.fn()
 const mockUpdate = vi.fn()
 const mockItems = ref<{ id: string; content: string; persons: string[]; created_at: string }[]>([])
 const mockLoading = ref(false)
@@ -22,6 +23,7 @@ vi.mock('~/composables/useTopics', () => ({
     error: mockError,
     fetchList: mockFetchList,
     create: mockCreate,
+    createMany: mockCreateMany,
     update: mockUpdate,
   })),
 }))
@@ -101,6 +103,17 @@ describe('topics page', () => {
       content: '今日あったこと',
       date: '2024-01-15T00:00:00.000Z',
     })
+  })
+
+  it('calls createMany and refreshes the list when CsvImportSection emits import', async () => {
+    const wrapper = await mountPage()
+    const csvImportSection = wrapper.findComponent({ name: 'CsvImportSection' })
+    await csvImportSection.vm.$emit('import', [
+      { content: 'CSVトピック', persons: [], created_at: '2024-01-15T00:00:00.000Z' },
+    ])
+    expect(mockCreateMany).toHaveBeenCalledWith([
+      { content: 'CSVトピック', date: '2024-01-15T00:00:00.000Z' },
+    ])
   })
 
   it('calls update with content and persons when TopicList emits update', async () => {

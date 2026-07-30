@@ -2,7 +2,9 @@
 import { useAsyncData } from '#app'
 import { ref } from 'vue'
 import { useWorkout } from '~/composables/useWorkout'
+import { importWorkoutRows, type WorkoutRecordCsvPayload } from '~/utils/csvImport'
 import AppErrorAlert from '~/components/AppErrorAlert.vue'
+import CsvImportSection from '~/components/CsvImportSection.vue'
 import WorkoutCategoryTabs from '~/components/WorkoutCategoryTabs.vue'
 import WorkoutForm from '~/components/WorkoutForm.vue'
 import WorkoutList from '~/components/WorkoutList.vue'
@@ -19,6 +21,7 @@ const {
   fetchList,
   fetchMenuRecords,
   create,
+  createMany,
   update,
   remove,
   toggleSortOrder,
@@ -26,6 +29,14 @@ const {
 const selectedCategory = ref<WorkoutCategory>('chest')
 const menuCandidates = getMenuCandidates(selectedCategory)
 const prefill = ref<WorkoutRecord | undefined>(undefined)
+
+const csvColumns = [
+  { key: 'category', label: 'カテゴリ' },
+  { key: 'menu', label: 'メニュー' },
+  { key: 'intensity', label: '強度' },
+  { key: 'reps', label: '回数' },
+  { key: 'date', label: '日付' },
+]
 
 await useAsyncData(
   () => `workout-${selectedCategory.value}`,
@@ -68,6 +79,18 @@ function handleCopy(record: WorkoutRecord) {
 async function handleRemove(id: string) {
   await remove(id)
 }
+
+async function handleCsvImport(payloads: WorkoutRecordCsvPayload[]) {
+  await createMany(
+    payloads.map((payload) => ({
+      category: payload.category,
+      menu: payload.menu,
+      intensity: payload.intensity,
+      reps: payload.reps,
+      date: payload.created_at ?? undefined,
+    })),
+  )
+}
 </script>
 
 <template>
@@ -84,6 +107,12 @@ async function handleRemove(id: string) {
       :menu-suggestions="menuSuggestions"
       :menu-candidates="menuCandidates"
       @submit="handleSubmit"
+    />
+    <CsvImportSection
+      :columns="csvColumns"
+      :validate="importWorkoutRows"
+      :loading="loading"
+      @import="handleCsvImport"
     />
     <SkeletonList v-if="loading && items.length === 0" />
     <WorkoutList
