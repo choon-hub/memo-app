@@ -4,8 +4,8 @@ export async function createAsyncDataMock() {
   const { ref } = await import('vue')
   return {
     useAsyncData: vi.fn(async (_key: unknown, fn?: () => unknown) => {
-      if (typeof fn === 'function') await fn()
-      return { data: ref(null), pending: ref(false), refresh: vi.fn(), execute: vi.fn() }
+      const result = typeof fn === 'function' ? await fn() : null
+      return { data: ref(result ?? null), pending: ref(false), refresh: vi.fn(), execute: vi.fn() }
     }),
     useLazyAsyncData: vi.fn(),
     useNuxtData: vi.fn(() => ({ data: ref(null) })),

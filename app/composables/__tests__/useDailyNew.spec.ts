@@ -6,10 +6,11 @@ import {
   resetMocks,
 } from '../../../test/mocks/supabase'
 import { useDailyNew } from '../useDailyNew'
+import { useSupabase } from '~/composables/useSupabase'
 import type { DailyNew } from '#shared/types/domain'
 
 vi.mock('~/composables/useSupabase', () => ({
-  useSupabase: () => mockSupabaseClient,
+  useSupabase: vi.fn(() => mockSupabaseClient),
 }))
 
 function mockTable(rows: DailyNew[]) {
@@ -36,7 +37,7 @@ describe('useDailyNew', () => {
       ])
 
       const { items, loading, error, fetchList } = useDailyNew()
-      await fetchList()
+      const result = await fetchList()
 
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('daily_new')
       expect(mockQueryChain.select).toHaveBeenCalledWith('*')
@@ -44,15 +45,19 @@ describe('useDailyNew', () => {
       expect(items.value[1].id).toBe('1')
       expect(loading.value).toBe(false)
       expect(error.value).toBeNull()
+      expect(result).toBe(items.value)
+      expect(result[0].id).toBe('2')
+      expect(result[1].id).toBe('1')
     })
 
     it('returns empty array when the table is empty', async () => {
       const { items, loading, error, fetchList } = useDailyNew()
-      await fetchList()
+      const result = await fetchList()
 
       expect(items.value).toEqual([])
       expect(loading.value).toBe(false)
       expect(error.value).toBeNull()
+      expect(result).toEqual([])
     })
 
     it('sets error when fetch fails', async () => {
@@ -61,11 +66,30 @@ describe('useDailyNew', () => {
       )
 
       const { items, loading, error, fetchList } = useDailyNew()
-      await fetchList()
+      const result = await fetchList()
 
       expect(error.value).toBe('fetch failed')
       expect(items.value).toEqual([])
       expect(loading.value).toBe(false)
+      expect(result).toEqual([])
+    })
+
+    it('catches an exception thrown by useSupabase() and sets it on error', async () => {
+      vi.mocked(useSupabase).mockImplementationOnce(() => {
+        throw new Error(
+          'Supabase environment variables (SUPABASE_URL, SUPABASE_KEY) are not configured.',
+        )
+      })
+
+      const { items, loading, error, fetchList } = useDailyNew()
+      const result = await fetchList()
+
+      expect(error.value).toBe(
+        'Supabase environment variables (SUPABASE_URL, SUPABASE_KEY) are not configured.',
+      )
+      expect(items.value).toEqual([])
+      expect(loading.value).toBe(false)
+      expect(result).toEqual([])
     })
   })
 

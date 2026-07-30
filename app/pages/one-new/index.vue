@@ -27,7 +27,10 @@ const csvColumns = [
   { key: 'date', label: '日付' },
 ]
 
-await useAsyncData('daily-new', fetchList)
+const { data } = await useAsyncData('daily-new', fetchList)
+if (data.value) {
+  items.value = data.value
+}
 
 async function handleSubmit(payload: { title: string; content: string; date: string }) {
   await create({ ...payload, date: `${payload.date}T00:00:00.000Z` })
