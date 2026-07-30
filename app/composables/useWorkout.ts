@@ -14,7 +14,7 @@ const lastCategory = ref<WorkoutCategory | undefined>(undefined)
 const sortOrder = ref<'asc' | 'desc'>('desc')
 
 export const useWorkout = () => {
-  async function fetchList(category?: WorkoutCategory) {
+  async function fetchList(category?: WorkoutCategory): Promise<WorkoutRecord[]> {
     lastCategory.value = category
     loading.value = true
     error.value = null
@@ -24,23 +24,33 @@ export const useWorkout = () => {
       const { data, error: fetchError } = await query
       if (fetchError) {
         error.value = fetchError.message
-        return
+        return items.value
       }
       items.value = sortByDate(data ?? [], sortOrder.value)
+      return items.value
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e)
+      return items.value
     } finally {
       loading.value = false
     }
   }
 
-  async function fetchMenuRecords() {
-    const { data, error: fetchError } = await useSupabase()
-      .from('workout_records')
-      .select('menu, category')
-    if (fetchError) {
-      error.value = fetchError.message
-      return
+  async function fetchMenuRecords(): Promise<Pick<WorkoutRecord, 'menu' | 'category'>[]> {
+    try {
+      const { data, error: fetchError } = await useSupabase()
+        .from('workout_records')
+        .select('menu, category')
+      if (fetchError) {
+        error.value = fetchError.message
+        return menuRecords.value
+      }
+      menuRecords.value = data ?? []
+      return menuRecords.value
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e)
+      return menuRecords.value
     }
-    menuRecords.value = data ?? []
   }
 
   async function toggleSortOrder() {
@@ -196,6 +206,7 @@ export const useWorkout = () => {
     error,
     sortOrder,
     lastCategory,
+    menuRecords,
     menuSuggestions,
     getMenuCandidates,
     fetchList,

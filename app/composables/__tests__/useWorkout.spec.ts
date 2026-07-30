@@ -2,10 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 import { mockQueryChain, mockSupabaseClient, resetMocks } from '../../../test/mocks/supabase'
 import { useWorkout } from '../useWorkout'
+import { useSupabase } from '~/composables/useSupabase'
 import type { WorkoutRecord } from '#shared/types/domain'
 
 vi.mock('~/composables/useSupabase', () => ({
-  useSupabase: () => mockSupabaseClient,
+  useSupabase: vi.fn(() => mockSupabaseClient),
 }))
 
 function mockTable(rows: WorkoutRecord[]) {
@@ -50,7 +51,7 @@ describe('useWorkout', () => {
       ])
 
       const { items, loading, error, fetchList } = useWorkout()
-      await fetchList()
+      const result = await fetchList()
 
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('workout_records')
       expect(mockQueryChain.select).toHaveBeenCalledWith('*')
@@ -59,6 +60,9 @@ describe('useWorkout', () => {
       expect(items.value[1].id).toBe('1')
       expect(loading.value).toBe(false)
       expect(error.value).toBeNull()
+      expect(result).toBe(items.value)
+      expect(result[0].id).toBe('2')
+      expect(result[1].id).toBe('1')
     })
 
     it('filters by category on the DB query when category is provided', async () => {
@@ -74,7 +78,7 @@ describe('useWorkout', () => {
       ])
 
       const { items, loading, error, fetchList } = useWorkout()
-      await fetchList('chest')
+      const result = await fetchList('chest')
 
       expect(mockQueryChain.select).toHaveBeenCalledWith('*')
       expect(mockQueryChain.eq).toHaveBeenCalledWith('category', 'chest')
@@ -82,27 +86,30 @@ describe('useWorkout', () => {
       expect(items.value[0].category).toBe('chest')
       expect(loading.value).toBe(false)
       expect(error.value).toBeNull()
+      expect(result).toBe(items.value)
     })
 
     it('returns empty array when the table is empty', async () => {
       const { items, loading, error, fetchList } = useWorkout()
-      await fetchList()
+      const result = await fetchList()
 
       expect(items.value).toEqual([])
       expect(loading.value).toBe(false)
       expect(error.value).toBeNull()
+      expect(result).toEqual([])
     })
 
     it('returns empty array when no records match the category', async () => {
       mockTable([])
 
       const { items, loading, error, fetchList } = useWorkout()
-      await fetchList('legs')
+      const result = await fetchList('legs')
 
       expect(mockQueryChain.eq).toHaveBeenCalledWith('category', 'legs')
       expect(items.value).toEqual([])
       expect(loading.value).toBe(false)
       expect(error.value).toBeNull()
+      expect(result).toEqual([])
     })
 
     it('sets error when fetch fails', async () => {
@@ -111,11 +118,30 @@ describe('useWorkout', () => {
       )
 
       const { items, loading, error, fetchList } = useWorkout()
-      await fetchList()
+      const result = await fetchList()
 
       expect(error.value).toBe('fetch failed')
       expect(items.value).toEqual([])
       expect(loading.value).toBe(false)
+      expect(result).toEqual([])
+    })
+
+    it('catches an exception thrown by useSupabase() and sets it on error', async () => {
+      vi.mocked(useSupabase).mockImplementationOnce(() => {
+        throw new Error(
+          'Supabase environment variables (SUPABASE_URL, SUPABASE_KEY) are not configured.',
+        )
+      })
+
+      const { items, loading, error, fetchList } = useWorkout()
+      const result = await fetchList()
+
+      expect(error.value).toBe(
+        'Supabase environment variables (SUPABASE_URL, SUPABASE_KEY) are not configured.',
+      )
+      expect(items.value).toEqual([])
+      expect(loading.value).toBe(false)
+      expect(result).toEqual([])
     })
   })
 
@@ -210,11 +236,12 @@ describe('useWorkout', () => {
         },
       ])
 
-      const { menuSuggestions, fetchMenuRecords } = useWorkout()
-      await fetchMenuRecords()
+      const { menuSuggestions, menuRecords, fetchMenuRecords } = useWorkout()
+      const result = await fetchMenuRecords()
 
       expect(mockQueryChain.select).toHaveBeenCalledWith('menu, category')
       expect(menuSuggestions.value).toEqual(['スクワット', 'ベンチプレス'])
+      expect(result).toBe(menuRecords.value)
     })
 
     it('includes menus from all categories, not just the active filter', async () => {

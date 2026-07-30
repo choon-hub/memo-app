@@ -16,6 +16,7 @@ const {
   loading,
   error,
   sortOrder,
+  menuRecords,
   menuSuggestions,
   getMenuCandidates,
   fetchList,
@@ -38,12 +39,18 @@ const csvColumns = [
   { key: 'date', label: '日付' },
 ]
 
-await useAsyncData(
+const { data: listData } = await useAsyncData(
   () => `workout-${selectedCategory.value}`,
   () => fetchList(selectedCategory.value),
 )
+if (listData.value) {
+  items.value = listData.value
+}
 // メニュー候補は全カテゴリ横断のため、カテゴリ別キャッシュとは別に一度だけ取得する
-await useAsyncData('workout-menus', () => fetchMenuRecords())
+const { data: menuData } = await useAsyncData('workout-menus', () => fetchMenuRecords())
+if (menuData.value) {
+  menuRecords.value = menuData.value
+}
 
 function handleCategoryChange(category: WorkoutCategory) {
   selectedCategory.value = category
