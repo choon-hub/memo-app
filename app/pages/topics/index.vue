@@ -27,7 +27,10 @@ const csvColumns = [
   { key: 'date', label: '日付' },
 ]
 
-await useAsyncData('topics', fetchList)
+const { data } = await useAsyncData('topics', fetchList)
+if (data.value) {
+  items.value = data.value
+}
 
 const selectedPerson = ref<string | null>(null)
 

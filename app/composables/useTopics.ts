@@ -10,16 +10,20 @@ const error = ref<string | null>(null)
 const sortOrder = ref<'asc' | 'desc'>('desc')
 
 export const useTopics = () => {
-  async function fetchList() {
+  async function fetchList(): Promise<Topic[]> {
     loading.value = true
     error.value = null
     try {
       const { data, error: fetchError } = await useSupabase().from('topics').select('*')
       if (fetchError) {
         error.value = fetchError.message
-        return
+        return items.value
       }
       items.value = sortByDate(data ?? [], sortOrder.value)
+      return items.value
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e)
+      return items.value
     } finally {
       loading.value = false
     }
