@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { defineComponent, h, Suspense, ref, computed, type Ref } from 'vue'
 import WorkoutPage from '../index.vue'
+import { useAsyncData } from '#app/composables/asyncData'
 import type { WorkoutCategory, WorkoutRecord } from '#shared/types/domain'
 
 vi.mock('#app/composables/asyncData', async () => {
@@ -34,6 +35,7 @@ vi.mock('~/composables/useWorkout', () => ({
     loading: mockLoading,
     error: mockError,
     sortOrder: mockSortOrder,
+    menuRecords: mockMenuRecords,
     menuSuggestions: mockMenuSuggestions,
     getMenuCandidates: mockGetMenuCandidates,
     fetchList: mockFetchList,
@@ -114,6 +116,34 @@ describe('workout page', () => {
     const wrapper = await mountPage()
     expect(wrapper.findComponent({ name: 'SkeletonList' }).exists()).toBe(false)
     expect(wrapper.findComponent({ name: 'WorkoutList' }).exists()).toBe(true)
+  })
+
+  it('renders items and menu candidates restored from payload when useAsyncData does not re-invoke fetchList/fetchMenuRecords', async () => {
+    const payloadItems = [makeRecord({ menu: 'Payload item' })]
+    const payloadMenuRecords = [
+      { menu: 'Payload menu candidate', category: 'chest' as WorkoutCategory },
+    ]
+    vi.mocked(useAsyncData)
+      .mockResolvedValueOnce({
+        data: ref(payloadItems),
+        pending: ref(false),
+        refresh: vi.fn(),
+        execute: vi.fn(),
+      } as unknown as Awaited<ReturnType<typeof useAsyncData>>)
+      .mockResolvedValueOnce({
+        data: ref(payloadMenuRecords),
+        pending: ref(false),
+        refresh: vi.fn(),
+        execute: vi.fn(),
+      } as unknown as Awaited<ReturnType<typeof useAsyncData>>)
+
+    const wrapper = await mountPage()
+
+    expect(mockFetchList).not.toHaveBeenCalled()
+    expect(mockFetchMenuRecords).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('Payload item')
+    const form = wrapper.findComponent({ name: 'WorkoutForm' })
+    expect(form.props('menuCandidates')).toEqual(['Payload menu candidate'])
   })
 
   it('defaults to the chest category tab on initial render', async () => {
