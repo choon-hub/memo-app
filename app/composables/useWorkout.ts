@@ -162,6 +162,20 @@ export const useWorkout = () => {
     })
   }
 
+  async function remove(id: string) {
+    await withLoading(loading, error, async () => {
+      const { error: deleteError } = await useSupabase()
+        .from('workout_records')
+        .delete()
+        .eq('id', id)
+      if (deleteError) {
+        error.value = deleteError.message
+        return
+      }
+      items.value = items.value.filter((item) => item.id !== id)
+    })
+  }
+
   const menuSuggestions = computed(() =>
     [...new Set(menuRecords.value.map((r) => r.menu))].sort((a, b) => a.localeCompare(b)),
   )
@@ -190,5 +204,6 @@ export const useWorkout = () => {
     create,
     createMany,
     update,
+    remove,
   }
 }

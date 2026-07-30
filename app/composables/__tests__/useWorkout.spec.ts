@@ -802,6 +802,107 @@ describe('useWorkout', () => {
     })
   })
 
+  describe('remove()', () => {
+    it('removes the item locally without refetching the list', async () => {
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          category: 'chest',
+          menu: '懸垂',
+          intensity: 0,
+          reps: 8,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+      ])
+
+      const { items, loading, error, fetchList, remove } = useWorkout()
+      await fetchList()
+
+      vi.mocked(mockSupabaseClient.from).mockClear()
+      mockQueryChain.select.mockClear()
+
+      await remove('1')
+
+      expect(mockQueryChain.delete).toHaveBeenCalled()
+      expect(mockQueryChain.eq).toHaveBeenCalledWith('id', '1')
+      expect(mockSupabaseClient.from).toHaveBeenCalledTimes(1)
+      expect(mockQueryChain.select).not.toHaveBeenCalled()
+      expect(error.value).toBeNull()
+      expect(loading.value).toBe(false)
+      expect(items.value).toHaveLength(1)
+      expect(items.value[0].id).toBe('2')
+    })
+
+    it('preserves sort order (desc) after remove', async () => {
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          category: 'chest',
+          menu: 'ダンベルフライ',
+          intensity: 20,
+          reps: 12,
+          created_at: '2024-01-02T00:00:00Z',
+        },
+        {
+          id: '3',
+          category: 'chest',
+          menu: 'スクワット',
+          intensity: 80,
+          reps: 8,
+          created_at: '2024-01-03T00:00:00Z',
+        },
+      ])
+
+      const { items, fetchList, remove } = useWorkout()
+      await fetchList()
+
+      await remove('2')
+
+      expect(items.value.map((item) => item.id)).toEqual(['3', '1'])
+    })
+
+    it('sets error and keeps items when delete fails', async () => {
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+
+      const { items, error, fetchList, remove } = useWorkout()
+      await fetchList()
+
+      mockQueryChain.then.mockImplementation((resolve: (v: unknown) => unknown) =>
+        Promise.resolve(resolve({ data: null, error: { message: 'delete failed' } })),
+      )
+
+      await remove('1')
+
+      expect(error.value).toBe('delete failed')
+      expect(items.value).toHaveLength(1)
+    })
+  })
+
   describe('createMany()', () => {
     it('inserts an array of payloads in a single call and refetches the list and menu records', async () => {
       mockTable([

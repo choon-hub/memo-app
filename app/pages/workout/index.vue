@@ -23,6 +23,7 @@ const {
   create,
   createMany,
   update,
+  remove,
   toggleSortOrder,
 } = useWorkout()
 const selectedCategory = ref<WorkoutCategory>('chest')
@@ -75,6 +76,10 @@ function handleCopy(record: WorkoutRecord) {
   prefill.value = { ...record }
 }
 
+async function handleRemove(id: string) {
+  await remove(id)
+}
+
 async function handleCsvImport(payloads: WorkoutRecordCsvPayload[]) {
   await createMany(
     payloads.map((payload) => ({
@@ -118,6 +123,7 @@ async function handleCsvImport(payloads: WorkoutRecordCsvPayload[]) {
       @toggle-sort="toggleSortOrder"
       @copy="handleCopy"
       @update="handleUpdate"
+      @remove="handleRemove"
     />
   </div>
 </template>
