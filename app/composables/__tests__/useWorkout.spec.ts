@@ -803,7 +803,7 @@ describe('useWorkout', () => {
   })
 
   describe('remove()', () => {
-    it('removes the item locally without refetching the list', async () => {
+    it('removes the item locally from items without refetching the list', async () => {
       mockTable([
         {
           id: '1',
@@ -816,9 +816,9 @@ describe('useWorkout', () => {
         {
           id: '2',
           category: 'chest',
-          menu: '懸垂',
-          intensity: 0,
-          reps: 8,
+          menu: 'ダンベルフライ',
+          intensity: 20,
+          reps: 12,
           created_at: '2024-01-02T00:00:00Z',
         },
       ])
@@ -826,13 +826,14 @@ describe('useWorkout', () => {
       const { items, loading, error, fetchList, remove } = useWorkout()
       await fetchList()
 
-      vi.mocked(mockSupabaseClient.from).mockClear()
       mockQueryChain.select.mockClear()
+      vi.mocked(mockSupabaseClient.from).mockClear()
 
       await remove('1')
 
       expect(mockQueryChain.delete).toHaveBeenCalled()
       expect(mockQueryChain.eq).toHaveBeenCalledWith('id', '1')
+      // delete のみが実行され、一覧の再 select は行われない
       expect(mockSupabaseClient.from).toHaveBeenCalledTimes(1)
       expect(mockQueryChain.select).not.toHaveBeenCalled()
       expect(error.value).toBeNull()
@@ -863,7 +864,7 @@ describe('useWorkout', () => {
           id: '3',
           category: 'chest',
           menu: 'スクワット',
-          intensity: 80,
+          intensity: 70,
           reps: 8,
           created_at: '2024-01-03T00:00:00Z',
         },
@@ -877,7 +878,7 @@ describe('useWorkout', () => {
       expect(items.value.map((item) => item.id)).toEqual(['3', '1'])
     })
 
-    it('sets error and keeps items when delete fails', async () => {
+    it('removes the matching entry from menuRecords so it no longer appears as a suggestion', async () => {
       mockTable([
         {
           id: '1',
@@ -889,17 +890,41 @@ describe('useWorkout', () => {
         },
       ])
 
-      const { items, error, fetchList, remove } = useWorkout()
+      const { items, menuSuggestions, fetchList, fetchMenuRecords, remove } = useWorkout()
       await fetchList()
+      await fetchMenuRecords()
+      expect(menuSuggestions.value).toContain('ベンチプレス')
+
+      await remove('1')
+
+      expect(items.value).toHaveLength(0)
+      expect(menuSuggestions.value).not.toContain('ベンチプレス')
+    })
+
+    it('sets error and keeps items and menuRecords when delete fails', async () => {
+      mockTable([
+        {
+          id: '1',
+          category: 'chest',
+          menu: 'ベンチプレス',
+          intensity: 60,
+          reps: 10,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ])
+
+      const { items, menuSuggestions, error, fetchList, fetchMenuRecords, remove } = useWorkout()
+      await fetchList()
+      await fetchMenuRecords()
 
       mockQueryChain.then.mockImplementation((resolve: (v: unknown) => unknown) =>
         Promise.resolve(resolve({ data: null, error: { message: 'delete failed' } })),
       )
-
       await remove('1')
 
       expect(error.value).toBe('delete failed')
       expect(items.value).toHaveLength(1)
+      expect(menuSuggestions.value).toContain('ベンチプレス')
     })
   })
 

@@ -191,7 +191,7 @@ describe('WorkoutList', () => {
     expect(wrapper.find('.confirm-delete-btn').exists()).toBe(false)
   })
 
-  it('returns to view mode without emitting remove when cancel button is clicked', async () => {
+  it('returns to view mode without emitting remove when cancel button is clicked on delete confirmation', async () => {
     const wrapper = mount(WorkoutList, {
       props: { items: mockItems, sortOrder: 'desc', loading: false },
     })

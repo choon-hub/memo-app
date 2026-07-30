@@ -390,6 +390,28 @@ function confirmDelete() {
   cursor: not-allowed;
 }
 
+.delete-btn {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4a4a68;
+  background: rgba(74, 74, 104, 0.08);
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background: rgba(74, 74, 104, 0.15);
+}
+
+.delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .confirm-label {
   font-size: 11px;
   font-weight: 700;
@@ -415,28 +437,6 @@ function confirmDelete() {
 }
 
 .confirm-delete-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.delete-btn {
-  font-size: 11px;
-  font-weight: 700;
-  color: #4a4a68;
-  background: rgba(74, 74, 104, 0.08);
-  border: none;
-  border-radius: 4px;
-  padding: 3px 8px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s;
-}
-
-.delete-btn:hover:not(:disabled) {
-  background: rgba(74, 74, 104, 0.15);
-}
-
-.delete-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
