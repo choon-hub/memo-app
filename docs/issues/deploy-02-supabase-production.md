@@ -14,8 +14,12 @@
 
 - [ ] 本番用 Supabase プロジェクトを作成（無料プランは 2 プロジェクトまで作成可能。
       既存の開発用と分けるか、開発用をそのまま本番に昇格するかを決める）
-- [ ] `supabase/migrations/0001_init.sql` を本番プロジェクトに適用
-      （`daily_new` / `topics` / `workout_records` の 3 テーブル）
+- [ ] `supabase/migrations/` 配下の全マイグレーションファイル（本 Issue 作成時点で
+      `0001_init.sql` 〜 `0003_add_persons_column_to_topics.sql`）を本番プロジェクトに適用
+      （`daily_new` / `topics` / `workout_records` の 3 テーブル、RLS 設定、`persons` カラム追加を含む）
+- [ ] 今後追加されるマイグレーションも本番への適用を徹底する運用にする
+      （`AGENTS.md` の「データベース」節、`supabase-migration` スキルの完了時チェックを参照。
+      適用漏れの実例: #148）
 - [ ] 本番の `SUPABASE_URL` / `SUPABASE_KEY`（anon key）を取得し、
       Vercel の環境変数に設定（[デプロイ #1]）。ローカルの `.env` とは分離する
 - [ ] **自動休止対策**を導入する（下記「無料枠でできること」参照）。
