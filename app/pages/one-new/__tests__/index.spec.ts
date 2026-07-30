@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { defineComponent, h, Suspense, ref } from 'vue'
 import OneNewPage from '../index.vue'
+import { useAsyncData } from '#app/composables/asyncData'
 
 vi.mock('#app/composables/asyncData', async () => {
   const { createAsyncDataMock } = await import('../../../../test/helpers/nuxt')
@@ -10,6 +11,7 @@ vi.mock('#app/composables/asyncData', async () => {
 
 const mockFetchList = vi.fn()
 const mockCreate = vi.fn()
+const mockCreateMany = vi.fn()
 const mockItems = ref<{ id: string; title: string; content: string; created_at: string }[]>([])
 const mockLoading = ref(false)
 const mockError = ref<string | null>(null)
@@ -21,6 +23,7 @@ vi.mock('~/composables/useDailyNew', () => ({
     error: mockError,
     fetchList: mockFetchList,
     create: mockCreate,
+    createMany: mockCreateMany,
   })),
 }))
 
@@ -91,6 +94,23 @@ describe('one-new page', () => {
     expect(wrapper.findComponent({ name: 'DailyNewList' }).exists()).toBe(true)
   })
 
+  it('renders items restored from payload when useAsyncData does not re-invoke fetchList', async () => {
+    const payloadItems = [
+      { id: '1', title: 'Payload item', content: '内容', created_at: '2024-01-01T00:00:00Z' },
+    ]
+    vi.mocked(useAsyncData).mockResolvedValueOnce({
+      data: ref(payloadItems),
+      pending: ref(false),
+      refresh: vi.fn(),
+      execute: vi.fn(),
+    } as unknown as Awaited<ReturnType<typeof useAsyncData>>)
+
+    const wrapper = await mountPage()
+
+    expect(mockFetchList).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('Payload item')
+  })
+
   it('calls create with ISO timestamp when form submits', async () => {
     const wrapper = await mountPage()
     const form = wrapper.findComponent({ name: 'DailyNewForm' })
@@ -100,5 +120,16 @@ describe('one-new page', () => {
       content: '内容',
       date: '2024-01-15T00:00:00.000Z',
     })
+  })
+
+  it('calls createMany and refreshes the list when CsvImportSection emits import', async () => {
+    const wrapper = await mountPage()
+    const csvImportSection = wrapper.findComponent({ name: 'CsvImportSection' })
+    await csvImportSection.vm.$emit('import', [
+      { title: 'CSVタイトル', content: 'CSV内容', created_at: '2024-01-15T00:00:00.000Z' },
+    ])
+    expect(mockCreateMany).toHaveBeenCalledWith([
+      { title: 'CSVタイトル', content: 'CSV内容', date: '2024-01-15T00:00:00.000Z' },
+    ])
   })
 })
